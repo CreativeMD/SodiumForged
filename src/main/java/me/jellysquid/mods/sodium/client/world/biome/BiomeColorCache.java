@@ -1,12 +1,12 @@
 package me.jellysquid.mods.sodium.client.world.biome;
 
+import java.util.Arrays;
+
 import me.jellysquid.mods.sodium.client.util.color.BoxBlur;
 import me.jellysquid.mods.sodium.client.util.color.BoxBlur.ColorBuffer;
 import me.jellysquid.mods.sodium.client.world.cloned.ChunkRenderContext;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.biome.Biome;
-
-import java.util.Arrays;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.biome.Biome;
 
 public class BiomeColorCache {
     private static final int NEIGHBOR_BLOCK_RADIUS = 2;
@@ -40,21 +40,21 @@ public class BiomeColorCache {
     }
 
     public void update(ChunkRenderContext context) {
-        this.minX = (context.getOrigin().getMinX() - NEIGHBOR_BLOCK_RADIUS) - this.blendRadius;
-        this.minY = (context.getOrigin().getMinY() - NEIGHBOR_BLOCK_RADIUS);
-        this.minZ = (context.getOrigin().getMinZ() - NEIGHBOR_BLOCK_RADIUS) - this.blendRadius;
+        this.minX = (context.getOrigin().minBlockX() - NEIGHBOR_BLOCK_RADIUS) - this.blendRadius;
+        this.minY = (context.getOrigin().minBlockY() - NEIGHBOR_BLOCK_RADIUS);
+        this.minZ = (context.getOrigin().minBlockZ() - NEIGHBOR_BLOCK_RADIUS) - this.blendRadius;
 
-        this.maxX = (context.getOrigin().getMaxX() + NEIGHBOR_BLOCK_RADIUS) + this.blendRadius;
-        this.maxY = (context.getOrigin().getMaxY() + NEIGHBOR_BLOCK_RADIUS);
-        this.maxZ = (context.getOrigin().getMaxZ() + NEIGHBOR_BLOCK_RADIUS) + this.blendRadius;
+        this.maxX = (context.getOrigin().maxBlockX() + NEIGHBOR_BLOCK_RADIUS) + this.blendRadius;
+        this.maxY = (context.getOrigin().maxBlockY() + NEIGHBOR_BLOCK_RADIUS);
+        this.maxZ = (context.getOrigin().maxBlockZ() + NEIGHBOR_BLOCK_RADIUS) + this.blendRadius;
 
         Arrays.fill(this.populatedSlices, false);
     }
 
     public int getColor(BiomeColorSource source, int blockX, int blockY, int blockZ) {
-        var relX = MathHelper.clamp(blockX, this.minX, this.maxX) - this.minX;
-        var relY = MathHelper.clamp(blockY, this.minY, this.maxY) - this.minY;
-        var relZ = MathHelper.clamp(blockZ, this.minZ, this.maxZ) - this.minZ;
+        var relX = Mth.clamp(blockX, this.minX, this.maxX) - this.minX;
+        var relY = Mth.clamp(blockY, this.minY, this.maxY) - this.minY;
+        var relZ = Mth.clamp(blockZ, this.minZ, this.maxZ) - this.minZ;
 
         if (!this.populatedSlices[relY]) {
             this.updateColorBuffers(relY);
@@ -78,7 +78,7 @@ public class BiomeColorCache {
                 int relativeX = worldX - this.minX;
                 int relativeZ = worldZ - this.minZ;
 
-                slice.grass.set(relativeX, relativeZ, biome.getGrassColorAt(worldX, worldZ));
+                slice.grass.set(relativeX, relativeZ, biome.getGrassColor(worldX, worldZ));
                 slice.foliage.set(relativeX, relativeZ, biome.getFoliageColor());
                 slice.water.set(relativeX, relativeZ, biome.getWaterColor());
             }
