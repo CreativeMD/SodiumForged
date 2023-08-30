@@ -1,15 +1,16 @@
 package me.jellysquid.mods.sodium.client.util.workarounds;
 
-import me.jellysquid.mods.sodium.client.gui.console.Console;
-import me.jellysquid.mods.sodium.client.gui.console.message.MessageLevel;
-import me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaGLContextInfo;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import me.jellysquid.mods.sodium.client.gui.console.Console;
+import me.jellysquid.mods.sodium.client.gui.console.message.MessageLevel;
+import me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia.NvidiaGLContextInfo;
+import net.minecraft.Util;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 public class PostLaunchChecks {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-PostlaunchChecks");
@@ -18,10 +19,10 @@ public class PostLaunchChecks {
         checkContextImplementation();
 
         if (isUsingPojavLauncher()) {
-            showConsoleMessage(Text.translatable("sodium.console.pojav_launcher"));
-            logMessage("It appears that PojavLauncher is being used with an OpenGL compatibility layer. This will " +
-                    "likely cause severe performance issues, graphical issues, and crashes when used with Sodium. This " +
-                    "configuration is not supported -- you are on your own!");
+            showConsoleMessage(Component.translatable("sodium.console.pojav_launcher"));
+            logMessage("It appears that PojavLauncher is being used with an OpenGL compatibility layer. This will "
+                    + "likely cause severe performance issues, graphical issues, and crashes when used with Sodium. This "
+                    + "configuration is not supported -- you are on your own!");
         }
     }
 
@@ -38,10 +39,10 @@ public class PostLaunchChecks {
         LOGGER.info("OpenGL Version: {}", driver.version());
 
         if (isBrokenNvidiaDriverInstalled(driver)) {
-            showConsoleMessage(Text.translatable("sodium.console.broken_nvidia_driver"));
-            logMessage("The NVIDIA graphics driver appears to be out of date. This will likely cause severe " +
-                    "performance issues and crashes when used with Sodium. The graphics driver should be updated to " +
-                    "the latest version (version 536.23 or newer).");
+            showConsoleMessage(Component.translatable("sodium.console.broken_nvidia_driver"));
+            logMessage("The NVIDIA graphics driver appears to be out of date. This will likely cause severe "
+                    + "performance issues and crashes when used with Sodium. The graphics driver should be updated to "
+                    + "the latest version (version 536.23 or newer).");
         }
     }
 
@@ -58,7 +59,7 @@ public class PostLaunchChecks {
         return new GLContextInfo(vendor, renderer, version);
     }
 
-    private static void showConsoleMessage(MutableText message) {
+    private static void showConsoleMessage(MutableComponent message) {
         Console.instance().logMessage(MessageLevel.SEVERE, message, 30.0);
     }
 
@@ -73,15 +74,14 @@ public class PostLaunchChecks {
     private static boolean isBrokenNvidiaDriverInstalled(GLContextInfo driver) {
         // The Linux driver has two separate branches which have overlapping version numbers, despite also having
         // different feature sets. As a result, we can't reliably determine which Linux drivers are broken...
-        if (Util.getOperatingSystem() != Util.OperatingSystem.WINDOWS) {
+        if (Util.getPlatform() != Util.OS.WINDOWS) {
             return false;
         }
 
         var version = NvidiaGLContextInfo.tryParse(driver);
 
         if (version != null) {
-            return version.isWithinRange(
-                    new NvidiaGLContextInfo(526, 47), // Broken in 526.47
+            return version.isWithinRange(new NvidiaGLContextInfo(526, 47), // Broken in 526.47
                     new NvidiaGLContextInfo(536, 23) // Fixed in 536.23
             );
         }

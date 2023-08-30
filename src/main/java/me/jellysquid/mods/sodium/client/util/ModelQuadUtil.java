@@ -1,11 +1,12 @@
 package me.jellysquid.mods.sodium.client.util;
 
+import org.joml.Vector3f;
+
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFacing;
 import net.caffeinemc.mods.sodium.api.util.NormI8;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import org.joml.Vector3f;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 
 /**
  * Provides some utilities and constants for interacting with vanilla's model quad vertex format.
@@ -23,11 +24,7 @@ import org.joml.Vector3f;
  */
 public class ModelQuadUtil {
     // Integer indices for vertex attributes, useful for accessing baked quad data
-    public static final int POSITION_INDEX = 0,
-            COLOR_INDEX = 3,
-            TEXTURE_INDEX = 4,
-            LIGHT_INDEX = 6,
-            NORMAL_INDEX = 7;
+    public static final int POSITION_INDEX = 0, COLOR_INDEX = 3, TEXTURE_INDEX = 4, LIGHT_INDEX = 6, NORMAL_INDEX = 7;
 
     // Size of vertex format in 4-byte integers
     public static final int VERTEX_SIZE = 8;
@@ -51,7 +48,7 @@ public class ModelQuadUtil {
         Direction closestFace = null;
 
         for (Direction face : DirectionUtil.ALL_DIRECTIONS) {
-            float dot = normal.dot(face.getUnitVector());
+            float dot = normal.dot(face.step());
 
             if (dot > maxDot) {
                 maxDot = dot;
@@ -59,7 +56,7 @@ public class ModelQuadUtil {
             }
         }
 
-        if (closestFace != null && MathHelper.approximatelyEquals(maxDot, 1.0f)) {
+        if (closestFace != null && Mth.equal(maxDot, 1.0f)) {
             return ModelQuadFacing.fromDirection(closestFace);
         }
 

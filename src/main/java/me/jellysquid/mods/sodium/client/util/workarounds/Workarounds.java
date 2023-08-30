@@ -1,17 +1,18 @@
 package me.jellysquid.mods.sodium.client.util.workarounds;
 
-import me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterProbe;
-import me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterVendor;
-import net.minecraft.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterProbe;
+import me.jellysquid.mods.sodium.client.util.workarounds.probe.GraphicsAdapterVendor;
+import net.minecraft.Util;
 
 public class Workarounds {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-Workarounds");
@@ -23,11 +24,9 @@ public class Workarounds {
 
         if (!workarounds.isEmpty()) {
             LOGGER.warn("Sodium has applied one or more workarounds to prevent crashes or other issues on your system: [{}]",
-                    workarounds.stream()
-                            .map(Enum::name)
-                            .collect(Collectors.joining(", ")));
-            LOGGER.warn("This is not necessarily an issue, but it may result in certain features or optimizations being " +
-                    "disabled. You can sometimes fix these issues by upgrading your graphics driver.");
+                    workarounds.stream().map(Enum::name).collect(Collectors.joining(", ")));
+            LOGGER.warn("This is not necessarily an issue, but it may result in certain features or optimizations being "
+                    + "disabled. You can sometimes fix these issues by upgrading your graphics driver.");
         }
 
         ACTIVE_WORKAROUNDS.set(workarounds);
@@ -35,21 +34,21 @@ public class Workarounds {
 
     private static Set<Reference> findNecessaryWorkarounds() {
         var workarounds = EnumSet.noneOf(Reference.class);
-        var operatingSystem = Util.getOperatingSystem();
+        var operatingSystem = Util.getPlatform();
 
         var graphicsAdapters = GraphicsAdapterProbe.getAdapters();
 
-        if ((operatingSystem == Util.OperatingSystem.WINDOWS || operatingSystem == Util.OperatingSystem.LINUX) &&
-                graphicsAdapters.stream().anyMatch(adapter -> adapter.vendor() == GraphicsAdapterVendor.NVIDIA)) {
+        if ((operatingSystem == Util.OS.WINDOWS || operatingSystem == Util.OS.LINUX)
+                && graphicsAdapters.stream().anyMatch(adapter -> adapter.vendor() == GraphicsAdapterVendor.NVIDIA)) {
             workarounds.add(Reference.NVIDIA_THREADED_OPTIMIZATIONS);
         }
 
-        if (operatingSystem == Util.OperatingSystem.LINUX) {
+        if (operatingSystem == Util.OS.LINUX) {
             var session = System.getenv("XDG_SESSION_TYPE");
 
             if (session == null) {
-                LOGGER.warn("Unable to determine desktop session type because the environment variable XDG_SESSION_TYPE " +
-                        "is not set! Your user session may not be configured correctly.");
+                LOGGER.warn("Unable to determine desktop session type because the environment variable XDG_SESSION_TYPE "
+                        + "is not set! Your user session may not be configured correctly.");
             }
 
             if (Objects.equals(session, "wayland")) {
@@ -62,8 +61,7 @@ public class Workarounds {
     }
 
     public static boolean isWorkaroundEnabled(Reference id) {
-        return ACTIVE_WORKAROUNDS.get()
-                .contains(id);
+        return ACTIVE_WORKAROUNDS.get().contains(id);
     }
 
     public static Set<Reference> getEnabledWorkarounds() {

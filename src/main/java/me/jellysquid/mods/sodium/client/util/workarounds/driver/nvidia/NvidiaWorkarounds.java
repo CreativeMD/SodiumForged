@@ -1,11 +1,12 @@
 package me.jellysquid.mods.sodium.client.util.workarounds.driver.nvidia;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import me.jellysquid.mods.sodium.client.util.workarounds.platform.linux.LibC;
 import me.jellysquid.mods.sodium.client.util.workarounds.platform.windows.Kernel32;
 import me.jellysquid.mods.sodium.client.util.workarounds.platform.windows.WindowsProcessHacks;
-import net.minecraft.util.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.minecraft.Util;
 
 public class NvidiaWorkarounds {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-NvidiaWorkarounds");
@@ -15,7 +16,7 @@ public class NvidiaWorkarounds {
         LOGGER.warn("If the game crashes immediately after this point, please make a bug report: https://github.com/CaffeineMC/sodium-fabric/issues");
 
         try {
-            switch (Util.getOperatingSystem()) {
+            switch (Util.getPlatform()) {
                 case WINDOWS -> {
                     // The NVIDIA drivers rely on parsing the command line arguments to detect Minecraft. If we destroy those,
                     // then it shouldn't be able to detect us anymore.
@@ -42,11 +43,12 @@ public class NvidiaWorkarounds {
     }
 
     public static void uninstall() {
-        switch (Util.getOperatingSystem()) {
+        switch (Util.getPlatform()) {
             case WINDOWS -> {
                 WindowsProcessHacks.resetCommandLine();
             }
-            case LINUX -> { }
+            case LINUX -> {
+            }
         }
     }
 }
