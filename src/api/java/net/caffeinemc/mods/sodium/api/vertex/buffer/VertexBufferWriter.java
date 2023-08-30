@@ -1,10 +1,12 @@
 package net.caffeinemc.mods.sodium.api.vertex.buffer;
 
-import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import net.minecraft.client.render.VertexConsumer;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
+
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
 
 public interface VertexBufferWriter {
     /**
@@ -42,8 +44,8 @@ public interface VertexBufferWriter {
         var clazz = consumer.getClass();
         var name = clazz.getName();
 
-        return new IllegalArgumentException(("The class %s does not implement interface VertexBufferWriter, " +
-                "which is required for compatibility with Sodium (see: https://github.com/CaffeineMC/sodium-fabric/issues/1620)").formatted(name));
+        return new IllegalArgumentException(("The class %s does not implement interface VertexBufferWriter, "
+                + "which is required for compatibility with Sodium (see: https://github.com/CaffeineMC/sodium-fabric/issues/1620)").formatted(name));
     }
 
     /**
@@ -74,10 +76,7 @@ public interface VertexBufferWriter {
      * @param count    The number of vertices to push
      * @param format   The format of the vertices
      */
-    static void copyInto(VertexBufferWriter writer,
-                         MemoryStack stack, long ptr, int count,
-                         VertexFormatDescription format)
-    {
+    static void copyInto(VertexBufferWriter writer, MemoryStack stack, long ptr, int count, VertexFormatDescription format) {
         var length = count * format.stride();
         var copy = stack.nmalloc(length);
 

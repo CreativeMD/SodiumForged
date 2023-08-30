@@ -1,10 +1,12 @@
 package net.caffeinemc.mods.sodium.api.math;
 
-import net.caffeinemc.mods.sodium.api.util.NormI8;
-import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Math;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+
+import net.caffeinemc.mods.sodium.api.util.NormI8;
 
 public class MatrixHelper {
     /**
@@ -113,7 +115,7 @@ public class MatrixHelper {
      * @param angleY The angle to rotate by on the Y-axis
      * @param angleX The angle to rotate by on the X-axis
      */
-    public static void rotateZYX(MatrixStack.Entry matrices, float angleZ, float angleY, float angleX) {
+    public static void rotateZYX(PoseStack.Pose matrices, float angleZ, float angleY, float angleX) {
         float sinX = Math.sin(angleX);
         float cosX = Math.cosFromSin(sinX, angleX);
         float sinInvX = -sinX;
@@ -126,8 +128,8 @@ public class MatrixHelper {
         float cosZ = Math.cosFromSin(sinZ, angleZ);
         float sinInvZ = -sinZ;
 
-        applySinCosMat4(matrices.getPositionMatrix(), sinX, sinY, sinZ, cosX, cosY, cosZ, sinInvX, sinInvY, sinInvZ);
-        applySinCosMat3(matrices.getNormalMatrix(), sinX, sinY, sinZ, cosX, cosY, cosZ, sinInvX, sinInvY, sinInvZ);
+        applySinCosMat4(matrices.pose(), sinX, sinY, sinZ, cosX, cosY, cosZ, sinInvX, sinInvY, sinInvZ);
+        applySinCosMat3(matrices.normal(), sinX, sinY, sinZ, cosX, cosY, cosZ, sinInvX, sinInvY, sinInvZ);
     }
 
     private static void applySinCosMat4(Matrix4f mat, float sinX, float sinY, float sinZ, float cosX, float cosY, float cosZ, float sinInvX, float sinInvY, float sinInvZ) {
@@ -148,27 +150,10 @@ public class MatrixHelper {
 
         // Setting each component individually involves significant overhead since the properties
         // for the matrix will be re-calculated each time.
-        mat.set(
-                (nm00 * cosY) + (mat.m20() * sinInvY),
-                (nm01 * cosY) + (mat.m21() * sinInvY),
-                (nm02 * cosY) + (mat.m22() * sinInvY),
-                (nm03 * cosY) + (mat.m23() * sinInvY),
-
-                (nm10 * cosX) + (nm20 * sinX),
-                (nm11 * cosX) + (nm21 * sinX),
-                (nm12 * cosX) + (nm22 * sinX),
-                (nm13 * cosX) + (nm23 * sinX),
-
-                (nm10 * sinInvX) + (nm20 * cosX),
-                (nm11 * sinInvX) + (nm21 * cosX),
-                (nm12 * sinInvX) + (nm22 * cosX),
-                (nm13 * sinInvX) + (nm23 * cosX),
-
-                mat.m30(),
-                mat.m31(),
-                mat.m32(),
-                mat.m33()
-        );
+        mat.set((nm00 * cosY) + (mat.m20() * sinInvY), (nm01 * cosY) + (mat.m21() * sinInvY), (nm02 * cosY) + (mat.m22() * sinInvY),
+                (nm03 * cosY) + (mat.m23() * sinInvY), (nm10 * cosX) + (nm20 * sinX), (nm11 * cosX) + (nm21 * sinX), (nm12 * cosX) + (nm22 * sinX),
+                (nm13 * cosX) + (nm23 * sinX), (nm10 * sinInvX) + (nm20 * cosX), (nm11 * sinInvX) + (nm21 * cosX), (nm12 * sinInvX) + (nm22 * cosX),
+                (nm13 * sinInvX) + (nm23 * cosX), mat.m30(), mat.m31(), mat.m32(), mat.m33());
     }
 
     private static void applySinCosMat3(Matrix3f mat, float sinX, float sinY, float sinZ, float cosX, float cosY, float cosZ, float sinInvX, float sinInvY, float sinInvZ) {
@@ -186,16 +171,10 @@ public class MatrixHelper {
 
         // Setting each component individually involves significant overhead since the properties
         // for the matrix will be re-calculated each time.
-        mat.set(nm00 * cosY + mat.m20() * sinInvY,
-                nm01 * cosY + mat.m21() * sinInvY,
-                nm02 * cosY + mat.m22() * sinInvY,
+        mat.set(nm00 * cosY + mat.m20() * sinInvY, nm01 * cosY + mat.m21() * sinInvY, nm02 * cosY + mat.m22() * sinInvY,
 
-                nm10 * cosX + nm20 * sinX,
-                nm11 * cosX + nm21 * sinX,
-                nm12 * cosX + nm22 * sinX,
+                nm10 * cosX + nm20 * sinX, nm11 * cosX + nm21 * sinX, nm12 * cosX + nm22 * sinX,
 
-                nm10 * sinInvX + nm20 * cosX,
-                nm11 * sinInvX + nm21 * cosX,
-                nm12 * sinInvX + nm22 * cosX);
+                nm10 * sinInvX + nm20 * cosX, nm11 * sinInvX + nm21 * cosX, nm12 * sinInvX + nm22 * cosX);
     }
 }
