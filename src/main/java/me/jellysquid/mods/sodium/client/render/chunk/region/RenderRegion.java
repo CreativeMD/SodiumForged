@@ -1,5 +1,10 @@
 package me.jellysquid.mods.sodium.client.render.chunk.region;
 
+import java.util.Arrays;
+import java.util.Map;
+
+import org.apache.commons.lang3.Validate;
+
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import me.jellysquid.mods.sodium.client.gl.arena.GlBufferArena;
 import me.jellysquid.mods.sodium.client.gl.arena.staging.StagingBuffer;
@@ -12,11 +17,7 @@ import me.jellysquid.mods.sodium.client.render.chunk.lists.ChunkRenderList;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
 import me.jellysquid.mods.sodium.client.util.MathUtil;
-import net.minecraft.util.math.ChunkSectionPos;
-import org.apache.commons.lang3.Validate;
-
-import java.util.Arrays;
-import java.util.Map;
+import net.minecraft.core.SectionPos;
 
 public class RenderRegion {
     public static final int REGION_WIDTH = 8;
@@ -60,7 +61,7 @@ public class RenderRegion {
     }
 
     public static long key(int x, int y, int z) {
-        return ChunkSectionPos.asLong(x, y, z);
+        return SectionPos.asLong(x, y, z);
     }
 
     public int getChunkX() {

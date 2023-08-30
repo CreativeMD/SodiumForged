@@ -1,21 +1,20 @@
 package me.jellysquid.mods.sodium.client.render.chunk.compile.executor;
 
-import me.jellysquid.mods.sodium.client.SodiumClientMod;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
-import me.jellysquid.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderTask;
-import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
-import me.jellysquid.mods.sodium.client.util.task.CancellationToken;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.MathHelper;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
+import me.jellysquid.mods.sodium.client.SodiumClientMod;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildContext;
+import me.jellysquid.mods.sodium.client.render.chunk.compile.tasks.ChunkBuilderTask;
+import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.util.Mth;
 
 public class ChunkBuilder {
     static final Logger LOGGER = LogManager.getLogger("ChunkBuilder");
@@ -28,7 +27,7 @@ public class ChunkBuilder {
 
     private final ChunkBuildContext localContext;
 
-    public ChunkBuilder(ClientWorld world, ChunkVertexType vertexType) {
+    public ChunkBuilder(ClientLevel world, ChunkVertexType vertexType) {
         int count = getThreadCount();
 
         for (int i = 0; i < count; i++) {
@@ -85,15 +84,14 @@ public class ChunkBuilder {
         for (Thread thread : this.threads) {
             try {
                 thread.join();
-            } catch (InterruptedException ignored) { }
+            } catch (InterruptedException ignored) {
+            }
         }
 
         this.threads.clear();
     }
 
-    public <TASK extends ChunkBuilderTask<OUTPUT>, OUTPUT> ChunkJobTyped<TASK, OUTPUT> scheduleTask(TASK task, boolean important,
-                                                                                                    Consumer<ChunkJobResult<OUTPUT>> consumer)
-    {
+    public <TASK extends ChunkBuilderTask<OUTPUT>, OUTPUT> ChunkJobTyped<TASK, OUTPUT> scheduleTask(TASK task, boolean important, Consumer<ChunkJobResult<OUTPUT>> consumer) {
         Validate.notNull(task, "Task must be non-null");
 
         if (!this.queue.isRunning()) {
@@ -112,7 +110,7 @@ public class ChunkBuilder {
      * thread.
      */
     private static int getOptimalThreadCount() {
-        return MathHelper.clamp(Math.max(getMaxThreadCount() / 3, getMaxThreadCount() - 6), 1, 10);
+        return Mth.clamp(Math.max(getMaxThreadCount() / 3, getMaxThreadCount() - 6), 1, 10);
     }
 
     private static int getThreadCount() {

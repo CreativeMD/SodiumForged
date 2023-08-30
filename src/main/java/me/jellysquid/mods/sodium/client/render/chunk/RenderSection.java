@@ -1,17 +1,18 @@
 package me.jellysquid.mods.sodium.client.render.chunk;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import me.jellysquid.mods.sodium.client.render.chunk.data.BuiltSectionInfo;
 import me.jellysquid.mods.sodium.client.render.chunk.occlusion.GraphDirection;
 import me.jellysquid.mods.sodium.client.render.chunk.occlusion.GraphDirectionSet;
 import me.jellysquid.mods.sodium.client.render.chunk.occlusion.VisibilityEncoding;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegion;
 import me.jellysquid.mods.sodium.client.util.task.CancellationToken;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.texture.Sprite;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 /**
  * The render state object for a chunk section. This contains all the graphics state for each render pass along with
@@ -32,22 +33,14 @@ public class RenderSection {
     private int lastVisibleFrame = -1;
 
     private int adjacentMask;
-    public RenderSection
-            adjacentDown,
-            adjacentUp,
-            adjacentNorth,
-            adjacentSouth,
-            adjacentWest,
-            adjacentEast;
-
+    public RenderSection adjacentDown, adjacentUp, adjacentNorth, adjacentSouth, adjacentWest, adjacentEast;
 
     // Rendering State
     private boolean built = false; // merge with the flags?
     private int flags = RenderSectionFlags.NONE;
-    private BlockEntity @Nullable[] globalBlockEntities;
-    private BlockEntity @Nullable[] culledBlockEntities;
-    private Sprite @Nullable[] animatedSprites;
-
+    private BlockEntity @Nullable [] globalBlockEntities;
+    private BlockEntity @Nullable [] culledBlockEntities;
+    private TextureAtlasSprite @Nullable [] animatedSprites;
 
     // Pending Update State
     @Nullable
@@ -102,7 +95,8 @@ public class RenderSection {
             case GraphDirection.SOUTH -> this.adjacentSouth = node;
             case GraphDirection.WEST -> this.adjacentWest = node;
             case GraphDirection.EAST -> this.adjacentEast = node;
-            default -> { }
+            default -> {
+            }
         }
     }
 
@@ -154,8 +148,8 @@ public class RenderSection {
     /**
      * Returns the chunk section position which this render refers to in the world.
      */
-    public ChunkSectionPos getPosition() {
-        return ChunkSectionPos.from(this.chunkX, this.chunkY, this.chunkZ);
+    public SectionPos getPosition() {
+        return SectionPos.of(this.chunkX, this.chunkY, this.chunkZ);
     }
 
     /**
@@ -237,10 +231,8 @@ public class RenderSection {
 
     @Override
     public String toString() {
-        return String.format("RenderSection at chunk (%d, %d, %d) from (%d, %d, %d) to (%d, %d, %d)",
-                this.chunkX, this.chunkY, this.chunkZ,
-                this.getOriginX(), this.getOriginY(), this.getOriginZ(),
-                this.getOriginX() + 15, this.getOriginY() + 15, this.getOriginZ() + 15);
+        return String.format("RenderSection at chunk (%d, %d, %d) from (%d, %d, %d) to (%d, %d, %d)", this.chunkX, this.chunkY, this.chunkZ, this.getOriginX(),
+                this.getOriginY(), this.getOriginZ(), this.getOriginX() + 15, this.getOriginY() + 15, this.getOriginZ() + 15);
     }
 
     public boolean isBuilt() {
@@ -292,14 +284,14 @@ public class RenderSection {
     /**
      * Returns the collection of animated sprites contained by this rendered chunk section.
      */
-    public Sprite @Nullable[] getAnimatedSprites() {
+    public TextureAtlasSprite @Nullable [] getAnimatedSprites() {
         return this.animatedSprites;
     }
 
     /**
      * Returns the collection of block entities contained by this rendered chunk.
      */
-    public BlockEntity @Nullable[] getCulledBlockEntities() {
+    public BlockEntity @Nullable [] getCulledBlockEntities() {
         return this.culledBlockEntities;
     }
 
@@ -307,7 +299,7 @@ public class RenderSection {
      * Returns the collection of block entities contained by this rendered chunk, which are not part of its culling
      * volume. These entities should always be rendered regardless of the render being visible in the frustum.
      */
-    public BlockEntity @Nullable[] getGlobalBlockEntities() {
+    public BlockEntity @Nullable [] getGlobalBlockEntities() {
         return this.globalBlockEntities;
     }
 

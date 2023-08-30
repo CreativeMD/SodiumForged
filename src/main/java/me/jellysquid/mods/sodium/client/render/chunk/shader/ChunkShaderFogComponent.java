@@ -1,6 +1,7 @@
 package me.jellysquid.mods.sodium.client.render.chunk.shader;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat4v;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformInt;
@@ -46,7 +47,7 @@ public abstract class ChunkShaderFogComponent {
         @Override
         public void setup() {
             this.uFogColor.set(RenderSystem.getShaderFogColor());
-            this.uFogShape.set(RenderSystem.getShaderFogShape().getId());
+            this.uFogShape.set(RenderSystem.getShaderFogShape().getIndex());
 
             this.uFogStart.setFloat(RenderSystem.getShaderFogStart());
             this.uFogEnd.setFloat(RenderSystem.getShaderFogEnd());

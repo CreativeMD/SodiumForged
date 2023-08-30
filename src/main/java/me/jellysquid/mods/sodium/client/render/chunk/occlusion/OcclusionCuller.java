@@ -1,36 +1,32 @@
 package me.jellysquid.mods.sodium.client.render.chunk.occlusion;
 
+import java.util.function.Consumer;
+
+import org.jetbrains.annotations.NotNull;
+
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.viewport.CameraTransform;
+import me.jellysquid.mods.sodium.client.render.viewport.Viewport;
 import me.jellysquid.mods.sodium.client.util.collections.DoubleBufferedQueue;
 import me.jellysquid.mods.sodium.client.util.collections.ReadQueue;
 import me.jellysquid.mods.sodium.client.util.collections.WriteQueue;
-import me.jellysquid.mods.sodium.client.render.viewport.Viewport;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Consumer;
+import net.minecraft.core.SectionPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 
 public class OcclusionCuller {
     private final Long2ReferenceMap<RenderSection> sections;
-    private final World world;
+    private final Level world;
 
     private final DoubleBufferedQueue<RenderSection> queue = new DoubleBufferedQueue<>();
 
-    public OcclusionCuller(Long2ReferenceMap<RenderSection> sections, World world) {
+    public OcclusionCuller(Long2ReferenceMap<RenderSection> sections, Level world) {
         this.sections = sections;
         this.world = world;
     }
 
-    public void findVisible(Consumer<RenderSection> visitor,
-                            Viewport viewport,
-                            float searchDistance,
-                            boolean useOcclusionCulling,
-                            int frame)
-    {
+    public void findVisible(Consumer<RenderSection> visitor, Viewport viewport, float searchDistance, boolean useOcclusionCulling, int frame) {
         final var queues = this.queue;
         queues.reset();
 
@@ -41,14 +37,7 @@ public class OcclusionCuller {
         }
     }
 
-    private static void processQueue(Consumer<RenderSection> visitor,
-                                     Viewport viewport,
-                                     float searchDistance,
-                                     boolean useOcclusionCulling,
-                                     int frame,
-                                     ReadQueue<RenderSection> readQueue,
-                                     WriteQueue<RenderSection> writeQueue)
-    {
+    private static void processQueue(Consumer<RenderSection> visitor, Viewport viewport, float searchDistance, boolean useOcclusionCulling, int frame, ReadQueue<RenderSection> readQueue, WriteQueue<RenderSection> writeQueue) {
         RenderSection section;
 
         while ((section = readQueue.dequeue()) != null) {
@@ -136,14 +125,14 @@ public class OcclusionCuller {
         render.addIncomingDirections(incoming);
     }
 
-    private static int getOutwardDirections(ChunkSectionPos origin, RenderSection section) {
+    private static int getOutwardDirections(SectionPos origin, RenderSection section) {
         int planes = 0;
 
-        planes |= section.getChunkX() <= origin.getX() ? 1 << GraphDirection.WEST  : 0;
-        planes |= section.getChunkX() >= origin.getX() ? 1 << GraphDirection.EAST  : 0;
+        planes |= section.getChunkX() <= origin.getX() ? 1 << GraphDirection.WEST : 0;
+        planes |= section.getChunkX() >= origin.getX() ? 1 << GraphDirection.EAST : 0;
 
-        planes |= section.getChunkY() <= origin.getY() ? 1 << GraphDirection.DOWN  : 0;
-        planes |= section.getChunkY() >= origin.getY() ? 1 << GraphDirection.UP    : 0;
+        planes |= section.getChunkY() <= origin.getY() ? 1 << GraphDirection.DOWN : 0;
+        planes |= section.getChunkY() >= origin.getY() ? 1 << GraphDirection.UP : 0;
 
         planes |= section.getChunkZ() <= origin.getZ() ? 1 << GraphDirection.NORTH : 0;
         planes |= section.getChunkZ() >= origin.getZ() ? 1 << GraphDirection.SOUTH : 0;
@@ -172,8 +161,12 @@ public class OcclusionCuller {
     private static int nearestToZero(int min, int max) {
         // this compiles to slightly better code than Math.min(Math.max(0, min), max)
         int clamped = 0;
-        if (min > 0) { clamped = min; }
-        if (max < 0) { clamped = max; }
+        if (min > 0) {
+            clamped = min;
+        }
+        if (max < 0) {
+            clamped = max;
+        }
         return clamped;
     }
 
@@ -181,23 +174,15 @@ public class OcclusionCuller {
         return !viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ(), 8.0f);
     }
 
-    private void init(Consumer<RenderSection> visitor,
-                      WriteQueue<RenderSection> queue,
-                      Viewport viewport,
-                      float searchDistance,
-                      boolean useOcclusionCulling,
-                      int frame)
-    {
+    private void init(Consumer<RenderSection> visitor, WriteQueue<RenderSection> queue, Viewport viewport, float searchDistance, boolean useOcclusionCulling, int frame) {
         var origin = viewport.getChunkCoord();
 
-        if (origin.getY() < this.world.getBottomSectionCoord()) {
+        if (origin.getY() < this.world.getMinSection()) {
             // below the world
-            this.initOutsideWorldHeight(queue, viewport, searchDistance, frame,
-                    this.world.getBottomSectionCoord(), GraphDirection.DOWN);
-        } else if (origin.getY() >= this.world.getTopSectionCoord()) {
+            this.initOutsideWorldHeight(queue, viewport, searchDistance, frame, this.world.getMinSection(), GraphDirection.DOWN);
+        } else if (origin.getY() >= this.world.getMaxSection()) {
             // above the world
-            this.initOutsideWorldHeight(queue, viewport, searchDistance, frame,
-                    this.world.getTopSectionCoord() - 1, GraphDirection.UP);
+            this.initOutsideWorldHeight(queue, viewport, searchDistance, frame, this.world.getMaxSection() - 1, GraphDirection.UP);
         } else {
             this.initWithinWorld(visitor, queue, viewport, useOcclusionCulling, frame);
         }
@@ -233,15 +218,9 @@ public class OcclusionCuller {
     // Enqueues sections that are inside the viewport using diamond spiral iteration to avoid sorting and ensure a
     // consistent order. Innermost layers are enqueued first. Within each layer, iteration starts at the northernmost
     // section and proceeds counterclockwise (N->W->S->E).
-    private void initOutsideWorldHeight(WriteQueue<RenderSection> queue,
-                                        Viewport viewport,
-                                        float searchDistance,
-                                        int frame,
-                                        int height,
-                                        int direction)
-    {
+    private void initOutsideWorldHeight(WriteQueue<RenderSection> queue, Viewport viewport, float searchDistance, int frame, int height, int direction) {
         var origin = viewport.getChunkCoord();
-        var radius = MathHelper.floor(searchDistance / 16.0f);
+        var radius = Mth.floor(searchDistance / 16.0f);
 
         // Layer 0
         this.tryVisitNode(queue, origin.getX(), height, origin.getZ(), direction, frame, viewport);
@@ -296,6 +275,6 @@ public class OcclusionCuller {
     }
 
     private RenderSection getRenderSection(int x, int y, int z) {
-        return this.sections.get(ChunkSectionPos.asLong(x, y, z));
+        return this.sections.get(SectionPos.asLong(x, y, z));
     }
 }

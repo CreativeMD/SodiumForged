@@ -1,10 +1,14 @@
 package me.jellysquid.mods.sodium.client.render.immediate.model;
 
-import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
-import net.minecraft.util.math.Direction;
-import org.joml.*;
-
 import java.util.Set;
+
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
+
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
+import net.minecraft.core.Direction;
 
 public class ModelCuboid {
     public final Quad[] quads;
@@ -12,7 +16,8 @@ public class ModelCuboid {
     private final Vector3f[] vertices;
     private final Vector3f[] shared;
 
-    public ModelCuboid(int u, int v, float x1, float y1, float z1, float sizeX, float sizeY, float sizeZ, float extraX, float extraY, float extraZ, boolean mirror, float textureWidth, float textureHeight, Set<Direction> renderDirections) {
+    public ModelCuboid(int u, int v, float x1, float y1, float z1, float sizeX, float sizeY, float sizeZ, float extraX, float extraY, float extraZ,
+            boolean mirror, float textureWidth, float textureHeight, Set<Direction> renderDirections) {
         float x2 = x1 + sizeX;
         float y2 = y1 + sizeY;
         float z2 = z1 + sizeZ;
@@ -48,41 +53,47 @@ public class ModelCuboid {
             shared[i] = new Vector3f(Float.NaN);
         }
 
-        float u0 = (float) u;
-        float u1 = (float) u + sizeZ;
-        float u2 = (float) u + sizeZ + sizeX;
-        float u3 = (float) u + sizeZ + sizeX + sizeX;
-        float u4 = (float) u + sizeZ + sizeX + sizeZ;
-        float u5 = (float) u + sizeZ + sizeX + sizeZ + sizeX;
+        float u0 = u;
+        float u1 = u + sizeZ;
+        float u2 = u + sizeZ + sizeX;
+        float u3 = u + sizeZ + sizeX + sizeX;
+        float u4 = u + sizeZ + sizeX + sizeZ;
+        float u5 = u + sizeZ + sizeX + sizeZ + sizeX;
 
-        float v0 = (float) v;
-        float v1 = (float) v + sizeZ;
-        float v2 = (float) v + sizeZ + sizeY;
+        float v0 = v;
+        float v1 = v + sizeZ;
+        float v2 = v + sizeZ + sizeY;
 
         var sides = new Quad[6];
 
         if (renderDirections.contains(Direction.DOWN)) {
-            sides[2] = new Quad(new Vector3f[] { shared[5], shared[4], shared[0], shared[1] }, u1, v0, u2, v1, textureWidth, textureHeight, mirror, Direction.DOWN);
+            sides[2] = new Quad(new Vector3f[] { shared[5], shared[4], shared[0], shared[1] }, u1, v0, u2, v1, textureWidth, textureHeight, mirror,
+                    Direction.DOWN);
         }
 
         if (renderDirections.contains(Direction.UP)) {
-            sides[3] = new Quad(new Vector3f[] { shared[2], shared[3], shared[7], shared[6] }, u2, v1, u3, v0, textureWidth, textureHeight, mirror, Direction.UP);
+            sides[3] = new Quad(new Vector3f[] { shared[2], shared[3], shared[7], shared[6] }, u2, v1, u3, v0, textureWidth, textureHeight, mirror,
+                    Direction.UP);
         }
 
         if (renderDirections.contains(Direction.WEST)) {
-            sides[1] = new Quad(new Vector3f[] { shared[0], shared[4], shared[7], shared[3] }, u0, v1, u1, v2, textureWidth, textureHeight, mirror, Direction.WEST);
+            sides[1] = new Quad(new Vector3f[] { shared[0], shared[4], shared[7], shared[3] }, u0, v1, u1, v2, textureWidth, textureHeight, mirror,
+                    Direction.WEST);
         }
 
         if (renderDirections.contains(Direction.NORTH)) {
-            sides[4] = new Quad(new Vector3f[] { shared[1], shared[0], shared[3], shared[2] }, u1, v1, u2, v2, textureWidth, textureHeight, mirror, Direction.NORTH);
+            sides[4] = new Quad(new Vector3f[] { shared[1], shared[0], shared[3], shared[2] }, u1, v1, u2, v2, textureWidth, textureHeight, mirror,
+                    Direction.NORTH);
         }
 
         if (renderDirections.contains(Direction.EAST)) {
-            sides[0] = new Quad(new Vector3f[] { shared[5], shared[1], shared[2], shared[6] }, u2, v1, u4, v2, textureWidth, textureHeight, mirror, Direction.EAST);
+            sides[0] = new Quad(new Vector3f[] { shared[5], shared[1], shared[2], shared[6] }, u2, v1, u4, v2, textureWidth, textureHeight, mirror,
+                    Direction.EAST);
         }
 
         if (renderDirections.contains(Direction.SOUTH)) {
-            sides[5] = new Quad(new Vector3f[] { shared[4], shared[5], shared[6], shared[7] }, u4, v1, u5, v2, textureWidth, textureHeight, mirror, Direction.SOUTH);
+            sides[5] = new Quad(new Vector3f[] { shared[4], shared[5], shared[6], shared[7] }, u4, v1, u5, v2, textureWidth, textureHeight, mirror,
+                    Direction.SOUTH);
         }
         this.quads = sides;
 
@@ -102,7 +113,6 @@ public class ModelCuboid {
     public static class Quad {
         public final Vector3f[] positions;
         public final Vector2f[] textures;
-
 
         public final Vector3f direction;
 
@@ -130,7 +140,7 @@ public class ModelCuboid {
             this.positions = positions;
             this.textures = textures;
 
-            this.direction = direction.getUnitVector();
+            this.direction = direction.step();
 
             if (flip) {
                 this.direction.mul(-1.0F, 1.0F, 1.0F);

@@ -1,58 +1,59 @@
 package me.jellysquid.mods.sodium.client.world.cloned;
 
+import java.util.Map;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMaps;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import me.jellysquid.mods.sodium.client.world.ReadableContainerExtended;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
 import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachmentBlockEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.math.BlockBox;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkSectionPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.ChunkNibbleArray;
-import net.minecraft.world.chunk.ChunkSection;
-import net.minecraft.world.chunk.ReadableContainer;
-import net.minecraft.world.chunk.WorldChunk;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Map;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.DataLayer;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
+import net.minecraft.world.level.chunk.PalettedContainerRO;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public class ClonedChunkSection {
-    private static final ChunkNibbleArray DEFAULT_SKY_LIGHT_ARRAY = new ChunkNibbleArray(15);
-    private static final ChunkNibbleArray DEFAULT_BLOCK_LIGHT_ARRAY = new ChunkNibbleArray(0);
+    private static final DataLayer DEFAULT_SKY_LIGHT_ARRAY = new DataLayer(15);
+    private static final DataLayer DEFAULT_BLOCK_LIGHT_ARRAY = new DataLayer(0);
 
-    private final ChunkSectionPos pos;
+    private final SectionPos pos;
 
     private final @Nullable Int2ReferenceMap<BlockEntity> blockEntityMap;
     private final @Nullable Int2ReferenceMap<Object> blockEntityAttachmentMap;
 
-    private final @Nullable ChunkNibbleArray[] lightDataArrays;
+    private final @Nullable DataLayer[] lightDataArrays;
 
-    private final @Nullable ReadableContainer<BlockState> blockData;
+    private final @Nullable PalettedContainerRO<BlockState> blockData;
 
-    private final @Nullable ReadableContainer<RegistryEntry<Biome>> biomeData;
+    private final @Nullable PalettedContainerRO<Holder<Biome>> biomeData;
 
     private long lastUsedTimestamp = Long.MAX_VALUE;
 
-    public ClonedChunkSection(World world, WorldChunk chunk, @Nullable ChunkSection section, ChunkSectionPos pos) {
+    public ClonedChunkSection(Level world, LevelChunk chunk, @Nullable LevelChunkSection section, SectionPos pos) {
         this.pos = pos;
 
-        ReadableContainer<BlockState> blockData = null;
-        ReadableContainer<RegistryEntry<Biome>> biomeData = null;
+        PalettedContainerRO<BlockState> blockData = null;
+        PalettedContainerRO<Holder<Biome>> biomeData = null;
 
         Int2ReferenceMap<BlockEntity> blockEntityMap = null;
         Int2ReferenceMap<Object> blockEntityAttachmentMap = null;
 
         if (section != null) {
-            if (!section.isEmpty()) {
-                blockData = ReadableContainerExtended.clone(section.getBlockStateContainer());
+            if (!section.hasOnlyAir()) {
+                blockData = ReadableContainerExtended.clone(section.getStates());
                 blockEntityMap = copyBlockEntities(chunk, pos);
 
                 if (blockEntityMap != null) {
@@ -60,7 +61,7 @@ public class ClonedChunkSection {
                 }
             }
 
-            biomeData = ReadableContainerExtended.clone(section.getBiomeContainer());
+            biomeData = ReadableContainerExtended.clone(section.getBiomes());
         }
 
         this.blockData = blockData;
@@ -73,13 +74,13 @@ public class ClonedChunkSection {
     }
 
     @NotNull
-    private static ChunkNibbleArray[] copyLightData(World world, ChunkSectionPos pos) {
-        var arrays = new ChunkNibbleArray[2];
-        arrays[LightType.BLOCK.ordinal()] = copyLightArray(world, LightType.BLOCK, pos);
+    private static DataLayer[] copyLightData(Level world, SectionPos pos) {
+        var arrays = new DataLayer[2];
+        arrays[LightLayer.BLOCK.ordinal()] = copyLightArray(world, LightLayer.BLOCK, pos);
 
         // Dimensions without sky-light should not have a default-initialized array
-        if (world.getDimension().hasSkyLight()) {
-            arrays[LightType.SKY.ordinal()] = copyLightArray(world, LightType.SKY, pos);
+        if (world.dimensionType().hasSkyLight()) {
+            arrays[LightLayer.SKY.ordinal()] = copyLightArray(world, LightLayer.SKY, pos);
         }
 
         return arrays;
@@ -90,10 +91,8 @@ public class ClonedChunkSection {
      * the light array is not loaded.
      */
     @NotNull
-    private static ChunkNibbleArray copyLightArray(World world, LightType type, ChunkSectionPos pos) {
-        var array = world.getLightingProvider()
-                .get(type)
-                .getLightSection(pos);
+    private static DataLayer copyLightArray(Level world, LightLayer type, SectionPos pos) {
+        var array = world.getLightEngine().getLayerListener(type).getDataLayerData(pos);
 
         if (array == null) {
             array = switch (type) {
@@ -106,9 +105,9 @@ public class ClonedChunkSection {
     }
 
     @Nullable
-    private static Int2ReferenceMap<BlockEntity> copyBlockEntities(WorldChunk chunk, ChunkSectionPos chunkCoord) {
-        BlockBox box = new BlockBox(chunkCoord.getMinX(), chunkCoord.getMinY(), chunkCoord.getMinZ(),
-                chunkCoord.getMaxX(), chunkCoord.getMaxY(), chunkCoord.getMaxZ());
+    private static Int2ReferenceMap<BlockEntity> copyBlockEntities(LevelChunk chunk, SectionPos chunkCoord) {
+        BoundingBox box = new BoundingBox(chunkCoord.minBlockX(), chunkCoord.minBlockY(), chunkCoord.minBlockZ(), chunkCoord.maxBlockX(),
+                chunkCoord.maxBlockY(), chunkCoord.maxBlockZ());
 
         Int2ReferenceOpenHashMap<BlockEntity> blockEntities = null;
 
@@ -117,7 +116,7 @@ public class ClonedChunkSection {
             BlockPos pos = entry.getKey();
             BlockEntity entity = entry.getValue();
 
-            if (box.contains(pos)) {
+            if (box.isInside(pos)) {
                 if (blockEntities == null) {
                     blockEntities = new Int2ReferenceOpenHashMap<>();
                 }
@@ -150,15 +149,15 @@ public class ClonedChunkSection {
         return blockEntityAttachments;
     }
 
-    public ChunkSectionPos getPosition() {
+    public SectionPos getPosition() {
         return this.pos;
     }
 
-    public @Nullable ReadableContainer<BlockState> getBlockData() {
+    public @Nullable PalettedContainerRO<BlockState> getBlockData() {
         return this.blockData;
     }
 
-    public @Nullable ReadableContainer<RegistryEntry<Biome>> getBiomeData() {
+    public @Nullable PalettedContainerRO<Holder<Biome>> getBiomeData() {
         return this.biomeData;
     }
 
@@ -170,7 +169,7 @@ public class ClonedChunkSection {
         return this.blockEntityAttachmentMap;
     }
 
-    public @Nullable ChunkNibbleArray getLightArray(LightType lightType) {
+    public @Nullable DataLayer getLightArray(LightLayer lightType) {
         return this.lightDataArrays[lightType.ordinal()];
     }
 
