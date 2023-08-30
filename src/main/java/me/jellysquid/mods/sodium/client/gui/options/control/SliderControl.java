@@ -1,13 +1,15 @@
 package me.jellysquid.mods.sodium.client.gui.options.control;
 
+import org.apache.commons.lang3.Validate;
+
+import com.mojang.blaze3d.platform.InputConstants;
+
 import me.jellysquid.mods.sodium.client.gui.options.Option;
 import me.jellysquid.mods.sodium.client.util.Dim2i;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.Rect2i;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-import org.apache.commons.lang3.Validate;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 public class SliderControl implements Control<Integer> {
     private final Option<Integer> option;
@@ -74,7 +76,7 @@ public class SliderControl implements Control<Integer> {
         }
 
         @Override
-        public void render(DrawContext drawContext, int mouseX, int mouseY, float delta) {
+        public void render(GuiGraphics drawContext, int mouseX, int mouseY, float delta) {
             super.render(drawContext, mouseX, mouseY, delta);
 
             if (this.option.isAvailable() && (this.hovered || this.isFocused())) {
@@ -84,19 +86,19 @@ public class SliderControl implements Control<Integer> {
             }
         }
 
-        private void renderStandaloneValue(DrawContext drawContext) {
+        private void renderStandaloneValue(GuiGraphics drawContext) {
             int sliderX = this.sliderBounds.getX();
             int sliderY = this.sliderBounds.getY();
             int sliderWidth = this.sliderBounds.getWidth();
             int sliderHeight = this.sliderBounds.getHeight();
 
-            Text label = this.formatter.format(this.option.getValue());
-            int labelWidth = this.font.getWidth(label);
+            Component label = this.formatter.format(this.option.getValue());
+            int labelWidth = this.font.width(label);
 
             this.drawString(drawContext, label, sliderX + sliderWidth - labelWidth, sliderY + (sliderHeight / 2) - 4, 0xFFFFFFFF);
         }
 
-        private void renderSlider(DrawContext drawContext) {
+        private void renderSlider(GuiGraphics drawContext) {
             int sliderX = this.sliderBounds.getX();
             int sliderY = this.sliderBounds.getY();
             int sliderWidth = this.sliderBounds.getWidth();
@@ -104,7 +106,7 @@ public class SliderControl implements Control<Integer> {
 
             this.thumbPosition = this.getThumbPositionForValue(this.option.getValue());
 
-            double thumbOffset = MathHelper.clamp((double) (this.getIntValue() - this.min) / this.range * sliderWidth, 0, sliderWidth);
+            double thumbOffset = Mth.clamp((double) (this.getIntValue() - this.min) / this.range * sliderWidth, 0, sliderWidth);
 
             int thumbX = (int) (sliderX + thumbOffset - THUMB_WIDTH);
             int trackY = (int) (sliderY + (sliderHeight / 2f) - ((double) TRACK_HEIGHT / 2));
@@ -114,7 +116,7 @@ public class SliderControl implements Control<Integer> {
 
             String label = String.valueOf(this.getIntValue());
 
-            int labelWidth = this.font.getWidth(label);
+            int labelWidth = this.font.width(label);
 
             this.drawString(drawContext, label, sliderX - labelWidth - 6, sliderY + (sliderHeight / 2) - 4, 0xFFFFFFFF);
         }
@@ -148,11 +150,11 @@ public class SliderControl implements Control<Integer> {
         }
 
         private void setValueFromMouse(double d) {
-            this.setValue((d - (double) this.sliderBounds.getX()) / (double) this.sliderBounds.getWidth());
+            this.setValue((d - this.sliderBounds.getX()) / this.sliderBounds.getWidth());
         }
 
         public void setValue(double d) {
-            this.thumbPosition = MathHelper.clamp(d, 0.0D, 1.0D);
+            this.thumbPosition = Mth.clamp(d, 0.0D, 1.0D);
 
             int value = this.getIntValue();
 
@@ -163,13 +165,14 @@ public class SliderControl implements Control<Integer> {
 
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (!isFocused()) return false;
+            if (!isFocused())
+                return false;
 
-            if (keyCode == InputUtil.GLFW_KEY_LEFT) {
-                this.option.setValue(MathHelper.clamp(this.option.getValue() - this.interval, this.min, this.max));
+            if (keyCode == InputConstants.KEY_LEFT) {
+                this.option.setValue(Mth.clamp(this.option.getValue() - this.interval, this.min, this.max));
                 return true;
-            } else if (keyCode == InputUtil.GLFW_KEY_RIGHT) {
-                this.option.setValue(MathHelper.clamp(this.option.getValue() + this.interval, this.min, this.max));
+            } else if (keyCode == InputConstants.KEY_RIGHT) {
+                this.option.setValue(Mth.clamp(this.option.getValue() + this.interval, this.min, this.max));
                 return true;
             }
 

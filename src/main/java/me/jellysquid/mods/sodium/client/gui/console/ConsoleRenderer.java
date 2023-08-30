@@ -1,24 +1,24 @@
 package me.jellysquid.mods.sodium.client.gui.console;
 
-import me.jellysquid.mods.sodium.client.gui.console.message.Message;
-import me.jellysquid.mods.sodium.client.gui.console.message.MessageLevel;
-import net.caffeinemc.mods.sodium.api.util.ColorARGB;
-import net.caffeinemc.mods.sodium.api.util.ColorU8;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextHandler;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Language;
-import net.minecraft.util.math.MathHelper;
-import org.lwjgl.glfw.GLFW;
-
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
+
+import org.lwjgl.glfw.GLFW;
+
+import me.jellysquid.mods.sodium.client.gui.console.message.Message;
+import me.jellysquid.mods.sodium.client.gui.console.message.MessageLevel;
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
+import net.caffeinemc.mods.sodium.api.util.ColorU8;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.StringSplitter;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.util.Mth;
 
 public class ConsoleRenderer {
     static final ConsoleRenderer INSTANCE = new ConsoleRenderer();
@@ -31,8 +31,7 @@ public class ConsoleRenderer {
     }
 
     private void purgeMessages(double currentTime) {
-        this.activeMessages.removeIf(message ->
-                currentTime > message.timestamp() + message.duration());
+        this.activeMessages.removeIf(message -> currentTime > message.timestamp() + message.duration());
     }
 
     private void pollMessages(Console console, double currentTime) {
@@ -43,15 +42,14 @@ public class ConsoleRenderer {
         }
     }
 
-    public void draw(DrawContext context) {
+    public void draw(GuiGraphics context) {
         var currentTime = GLFW.glfwGetTime();
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
 
-        var matrices = context.getMatrices();
-        matrices.push();
+        var matrices = context.pose();
+        matrices.pushPose();
         matrices.translate(0.0f, 0.0f, 1000.0f);
-
 
         var paddingWidth = 3;
         var paddingHeight = 1;
@@ -69,16 +67,16 @@ public class ConsoleRenderer {
                     continue;
                 }
 
-                List<OrderedText> lines = new ArrayList<>();
+                List<FormattedCharSequence> lines = new ArrayList<>();
 
                 var messageWidth = 270;
 
-                TextHandler textHandler = client.textRenderer.getTextHandler();
-                textHandler.wrapLines(message.text(), messageWidth - 20, Style.EMPTY, (text, lastLineWrapped) -> {
-                    lines.add(Language.getInstance().reorder(text));
+                StringSplitter textHandler = client.font.getSplitter();
+                textHandler.splitLines(message.text(), messageWidth - 20, Style.EMPTY, (text, lastLineWrapped) -> {
+                    lines.add(Language.getInstance().getVisualOrder(text));
                 });
 
-                var messageHeight = (client.textRenderer.fontHeight * lines.size()) + (paddingHeight * 2);
+                var messageHeight = (client.font.lineHeight * lines.size()) + (paddingHeight * 2);
 
                 renders.add(new MessageRender(x, y, messageWidth, messageHeight, message.level(), lines, opacity));
 
@@ -86,8 +84,8 @@ public class ConsoleRenderer {
             }
         }
 
-        var mouseX = client.mouse.getX() / client.getWindow().getScaleFactor();
-        var mouseY = client.mouse.getY() / client.getWindow().getScaleFactor();
+        var mouseX = client.mouseHandler.xpos() / client.getWindow().getGuiScale();
+        var mouseY = client.mouseHandler.ypos() / client.getWindow().getGuiScale();
 
         boolean hovered = false;
 
@@ -113,23 +111,20 @@ public class ConsoleRenderer {
             }
 
             // message background
-            context.fill(x, y, x + width, y + height,
-                    ColorARGB.withAlpha(colors.background(), weightAlpha(opacity)));
+            context.fill(x, y, x + width, y + height, ColorARGB.withAlpha(colors.background(), weightAlpha(opacity)));
 
             // message colored stripe
-            context.fill(x, y, x + 1, y + height,
-                    ColorARGB.withAlpha(colors.foreground(), weightAlpha(opacity)));
+            context.fill(x, y, x + 1, y + height, ColorARGB.withAlpha(colors.foreground(), weightAlpha(opacity)));
 
             for (var line : render.lines()) {
                 // message text
-                context.drawText(client.textRenderer, line, x + paddingWidth + 3, y + paddingHeight,
-                        ColorARGB.withAlpha(colors.text(), weightAlpha(opacity)), false);
+                context.drawString(client.font, line, x + paddingWidth + 3, y + paddingHeight, ColorARGB.withAlpha(colors.text(), weightAlpha(opacity)), false);
 
-                y += client.textRenderer.fontHeight;
+                y += client.font.lineHeight;
             }
         }
 
-        matrices.pop();
+        matrices.popPose();
     }
 
     private static double getMessageOpacity(ActiveMessage message, double time) {
@@ -164,19 +159,17 @@ public class ConsoleRenderer {
     }
 
     private static double getAnimationProgress(double currentTime, double startTime, double endTime) {
-        return MathHelper.clamp(MathHelper.getLerpProgress(currentTime, startTime, endTime), 0.0D, 1.0D);
+        return Mth.clamp(Mth.inverseLerp(currentTime, startTime, endTime), 0.0D, 1.0D);
     }
 
     private static int weightAlpha(double scale) {
         return ColorU8.normalizedFloatToByte((float) scale);
     }
 
-    private record ActiveMessage(MessageLevel level, Text text, double duration, double timestamp) {
+    private record ActiveMessage(MessageLevel level, Component text, double duration, double timestamp) {
 
         public static ActiveMessage create(Message message, double timestamp) {
-            var text = message.text()
-                    .copy()
-                    .styled((style) -> style.withFont(MinecraftClient.UNICODE_FONT_ID));
+            var text = message.text().copy().withStyle((style) -> style.withFont(Minecraft.UNIFORM_FONT));
 
             return new ActiveMessage(message.level(), text, message.duration(), timestamp);
         }
@@ -185,30 +178,18 @@ public class ConsoleRenderer {
     private static final EnumMap<MessageLevel, ColorPalette> COLORS = new EnumMap<>(MessageLevel.class);
 
     static {
-        COLORS.put(MessageLevel.INFO, new ColorPalette(
-                ColorARGB.pack(255, 255, 255),
-                ColorARGB.pack( 15,  15,  15),
-                ColorARGB.pack( 15,  15,  15)
-        ));
+        COLORS.put(MessageLevel.INFO, new ColorPalette(ColorARGB.pack(255, 255, 255), ColorARGB.pack(15, 15, 15), ColorARGB.pack(15, 15, 15)));
 
-        COLORS.put(MessageLevel.WARN, new ColorPalette(
-                ColorARGB.pack(224, 187,   0),
-                ColorARGB.pack( 25,  21,   0),
-                ColorARGB.pack(180, 150,   0)
-        ));
+        COLORS.put(MessageLevel.WARN, new ColorPalette(ColorARGB.pack(224, 187, 0), ColorARGB.pack(25, 21, 0), ColorARGB.pack(180, 150, 0)));
 
-        COLORS.put(MessageLevel.SEVERE, new ColorPalette(
-                ColorARGB.pack(220,   0,   0),
-                ColorARGB.pack( 25,   0,   0),
-                ColorARGB.pack(160,   0,   0)
-        ));
+        COLORS.put(MessageLevel.SEVERE, new ColorPalette(ColorARGB.pack(220, 0, 0), ColorARGB.pack(25, 0, 0), ColorARGB.pack(160, 0, 0)));
     }
 
     private record ColorPalette(int text, int background, int foreground) {
 
     }
 
-    private record MessageRender(int x, int y, int width, int height, MessageLevel level, List<OrderedText> lines, double opacity) {
+    private record MessageRender(int x, int y, int width, int height, MessageLevel level, List<FormattedCharSequence> lines, double opacity) {
 
     }
 }

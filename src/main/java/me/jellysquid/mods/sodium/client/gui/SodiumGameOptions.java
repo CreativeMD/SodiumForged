@@ -1,20 +1,21 @@
 package me.jellysquid.mods.sodium.client.gui;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
-import me.jellysquid.mods.sodium.client.gui.options.TextProvider;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.option.GraphicsMode;
-import net.minecraft.text.Text;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+
+import me.jellysquid.mods.sodium.client.gui.options.TextProvider;
+import net.minecraft.client.GraphicsStatus;
+import net.minecraft.network.chat.Component;
+import net.minecraftforge.fml.loading.FMLPaths;
 
 public class SodiumGameOptions {
     private static final String DEFAULT_FILE_NAME = "sodium-options.json";
@@ -70,27 +71,24 @@ public class SodiumGameOptions {
         FANCY("options.clouds.fancy"),
         FAST("options.clouds.fast");
 
-        private final Text name;
+        private final Component name;
 
         GraphicsQuality(String name) {
-            this.name = Text.translatable(name);
+            this.name = Component.translatable(name);
         }
 
         @Override
-        public Text getLocalizedName() {
+        public Component getLocalizedName() {
             return this.name;
         }
 
-        public boolean isFancy(GraphicsMode graphicsMode) {
-            return (this == FANCY) || (this == DEFAULT && (graphicsMode == GraphicsMode.FANCY || graphicsMode == GraphicsMode.FABULOUS));
+        public boolean isFancy(GraphicsStatus graphicsMode) {
+            return (this == FANCY) || (this == DEFAULT && (graphicsMode == GraphicsStatus.FANCY || graphicsMode == GraphicsStatus.FABULOUS));
         }
     }
 
-    private static final Gson GSON = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .setPrettyPrinting()
-            .excludeFieldsWithModifiers(Modifier.PRIVATE)
-            .create();
+    private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setPrettyPrinting()
+            .excludeFieldsWithModifiers(Modifier.PRIVATE).create();
 
     public static SodiumGameOptions load() {
         return load(DEFAULT_FILE_NAME);
@@ -122,9 +120,7 @@ public class SodiumGameOptions {
     }
 
     private static Path getConfigPath(String name) {
-        return FabricLoader.getInstance()
-                .getConfigDir()
-                .resolve(name);
+        return FMLPaths.CONFIGDIR.get().resolve(name);
     }
 
     public void writeChanges() throws IOException {

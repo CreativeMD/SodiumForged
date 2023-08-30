@@ -1,15 +1,15 @@
 package me.jellysquid.mods.sodium.client.gui.options;
 
-import me.jellysquid.mods.sodium.client.gui.options.control.Control;
-import me.jellysquid.mods.sodium.client.gui.options.storage.OptionStorage;
-import net.minecraft.text.Text;
-
 import java.util.Collection;
 
-public interface Option<T> {
-    Text getName();
+import me.jellysquid.mods.sodium.client.gui.options.control.Control;
+import me.jellysquid.mods.sodium.client.gui.options.storage.OptionStorage;
+import net.minecraft.network.chat.Component;
 
-    Text getTooltip();
+public interface Option<T> {
+    Component getName();
+
+    Component getTooltip();
 
     OptionImpact getImpact();
 
