@@ -1,16 +1,34 @@
 package me.jellysquid.mods.sodium.client.gl.device;
 
+import java.nio.ByteBuffer;
+
+import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL20C;
+import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL31C;
+import org.lwjgl.opengl.GL32C;
+import org.lwjgl.opengl.GLCapabilities;
+
+import com.mojang.blaze3d.vertex.BufferUploader;
+
 import me.jellysquid.mods.sodium.client.gl.array.GlVertexArray;
-import me.jellysquid.mods.sodium.client.gl.buffer.*;
+import me.jellysquid.mods.sodium.client.gl.buffer.GlBuffer;
+import me.jellysquid.mods.sodium.client.gl.buffer.GlBufferMapFlags;
+import me.jellysquid.mods.sodium.client.gl.buffer.GlBufferMapping;
+import me.jellysquid.mods.sodium.client.gl.buffer.GlBufferStorageFlags;
+import me.jellysquid.mods.sodium.client.gl.buffer.GlBufferTarget;
+import me.jellysquid.mods.sodium.client.gl.buffer.GlBufferUsage;
+import me.jellysquid.mods.sodium.client.gl.buffer.GlImmutableBuffer;
+import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.functions.DeviceFunctions;
 import me.jellysquid.mods.sodium.client.gl.state.GlStateTracker;
 import me.jellysquid.mods.sodium.client.gl.sync.GlFence;
-import me.jellysquid.mods.sodium.client.gl.tessellation.*;
+import me.jellysquid.mods.sodium.client.gl.tessellation.GlIndexType;
+import me.jellysquid.mods.sodium.client.gl.tessellation.GlPrimitiveType;
+import me.jellysquid.mods.sodium.client.gl.tessellation.GlTessellation;
+import me.jellysquid.mods.sodium.client.gl.tessellation.GlVertexArrayTessellation;
+import me.jellysquid.mods.sodium.client.gl.tessellation.TessellationBinding;
 import me.jellysquid.mods.sodium.client.gl.util.EnumBitField;
-import net.minecraft.client.render.BufferRenderer;
-import org.lwjgl.opengl.*;
-
-import java.nio.ByteBuffer;
 
 public class GLRenderDevice implements RenderDevice {
     private final GlStateTracker stateTracker = new GlStateTracker();
@@ -35,7 +53,7 @@ public class GLRenderDevice implements RenderDevice {
             return;
         }
 
-        BufferRenderer.reset();
+        BufferUploader.reset();
 
         this.stateTracker.clear();
         this.isActive = true;
@@ -247,8 +265,7 @@ public class GLRenderDevice implements RenderDevice {
             GlImmutableBuffer buffer = new GlImmutableBuffer(flags);
 
             this.bindBuffer(GlBufferTarget.ARRAY_BUFFER, buffer);
-            GLRenderDevice.this.functions.getBufferStorageFunctions()
-                    .createBufferStorage(GlBufferTarget.ARRAY_BUFFER, bufferSize, flags);
+            GLRenderDevice.this.functions.getBufferStorageFunctions().createBufferStorage(GlBufferTarget.ARRAY_BUFFER, bufferSize, flags);
 
             return buffer;
         }
@@ -271,11 +288,7 @@ public class GLRenderDevice implements RenderDevice {
         public void multiDrawElementsBaseVertex(MultiDrawBatch batch, GlIndexType indexType) {
             GlPrimitiveType primitiveType = GLRenderDevice.this.activeTessellation.getPrimitiveType();
 
-            GL32C.nglMultiDrawElementsBaseVertex(primitiveType.getId(),
-                    batch.pElementCount,
-                    indexType.getFormatId(),
-                    batch.pElementPointer,
-                    batch.size(),
+            GL32C.nglMultiDrawElementsBaseVertex(primitiveType.getId(), batch.pElementCount, indexType.getFormatId(), batch.pElementPointer, batch.size(),
                     batch.pBaseVertex);
         }
 

@@ -1,11 +1,13 @@
 package me.jellysquid.mods.sodium.client.gl.shader;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import me.jellysquid.mods.sodium.client.gl.GlObject;
-import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
+
+import com.mojang.blaze3d.platform.GlStateManager;
+
+import me.jellysquid.mods.sodium.client.gl.GlObject;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * A compiled OpenGL shader object.
@@ -13,9 +15,9 @@ import org.lwjgl.opengl.GL20C;
 public class GlShader extends GlObject {
     private static final Logger LOGGER = LogManager.getLogger(GlShader.class);
 
-    private final Identifier name;
+    private final ResourceLocation name;
 
-    public GlShader(ShaderType type, Identifier name, String src) {
+    public GlShader(ShaderType type, ResourceLocation name, String src) {
         this.name = name;
 
         int handle = GL20C.glCreateShader(type.id);
@@ -37,7 +39,7 @@ public class GlShader extends GlObject {
         this.setHandle(handle);
     }
 
-    public Identifier getName() {
+    public ResourceLocation getName() {
         return this.name;
     }
 

@@ -1,19 +1,21 @@
 package me.jellysquid.mods.sodium.client.gl.shader;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import me.jellysquid.mods.sodium.client.gl.GlObject;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
-import me.jellysquid.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
-import net.minecraft.util.Identifier;
+import java.util.function.Function;
+import java.util.function.IntFunction;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL20C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL32C;
 
-import java.util.function.Function;
-import java.util.function.IntFunction;
+import com.mojang.blaze3d.platform.GlStateManager;
+
+import me.jellysquid.mods.sodium.client.gl.GlObject;
+import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
+import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
+import me.jellysquid.mods.sodium.client.render.chunk.shader.ShaderBindingContext;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * An OpenGL shader program.
@@ -32,7 +34,7 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
         return this.shaderInterface;
     }
 
-    public static Builder builder(Identifier identifier) {
+    public static Builder builder(ResourceLocation identifier) {
         return new Builder(identifier);
     }
 
@@ -75,10 +77,10 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
     }
 
     public static class Builder {
-        private final Identifier name;
+        private final ResourceLocation name;
         private final int program;
 
-        public Builder(Identifier name) {
+        public Builder(ResourceLocation name) {
             this.name = name;
             this.program = GL20C.glCreateProgram();
         }
