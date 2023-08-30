@@ -1,20 +1,23 @@
 package me.jellysquid.mods.sodium.client.model.light.flat;
 
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.getEmissiveLightmap;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackBL;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackEM;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackFC;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackLU;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackSL;
+
+import java.util.Arrays;
+
 import me.jellysquid.mods.sodium.client.model.light.LightPipeline;
 import me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess;
 import me.jellysquid.mods.sodium.client.model.light.data.QuadLightData;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.model.quad.properties.ModelQuadFlags;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockRenderView;
-
-import java.util.Arrays;
-
-import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.*;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * A light pipeline which implements "classic-style" lighting through simply using the light value of the adjacent
@@ -49,7 +52,7 @@ public class FlatLightPipeline implements LightPipeline {
         }
 
         Arrays.fill(out.lm, lightmap);
-        Arrays.fill(out.br, this.lightCache.getWorld().getBrightness(lightFace, shade));
+        Arrays.fill(out.br, this.lightCache.getWorld().getShade(lightFace, shade));
     }
 
     /**
@@ -64,11 +67,11 @@ public class FlatLightPipeline implements LightPipeline {
 
         // Check emissivity of the origin state
         if (unpackEM(word)) {
-            return LightmapTextureManager.MAX_LIGHT_COORDINATE;
+            return LightTexture.FULL_BRIGHT;
         }
 
         // Use world light values from the offset pos, but luminance from the origin pos
         int adjWord = this.lightCache.get(pos, face);
-        return LightmapTextureManager.pack(Math.max(unpackBL(adjWord), unpackLU(word)), unpackSL(adjWord));
+        return LightTexture.pack(Math.max(unpackBL(adjWord), unpackLU(word)), unpackSL(adjWord));
     }
 }

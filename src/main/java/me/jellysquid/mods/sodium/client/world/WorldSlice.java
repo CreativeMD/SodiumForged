@@ -1,5 +1,12 @@
 package me.jellysquid.mods.sodium.client.world;
 
+import java.util.Arrays;
+import java.util.Objects;
+
+import org.jetbrains.annotations.Nullable;
+
+import com.mojang.authlib.minecraft.client.MinecraftClient;
+
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import me.jellysquid.mods.sodium.client.world.biome.BiomeColorCache;
 import me.jellysquid.mods.sodium.client.world.biome.BiomeColorSource;
@@ -9,25 +16,20 @@ import me.jellysquid.mods.sodium.client.world.cloned.ChunkRenderContext;
 import me.jellysquid.mods.sodium.client.world.cloned.ClonedChunkSection;
 import me.jellysquid.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
 import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachedBlockView;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.fluid.FluidState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.math.*;
-import net.minecraft.world.BlockRenderView;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.ColorResolver;
 import net.minecraft.world.chunk.ChunkNibbleArray;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.chunk.light.LightingProvider;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Arrays;
-import java.util.Objects;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.ColorResolver;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 
 /**
  * <p>Takes a slice of world state (block states, biome and light data arrays) and copies the data for use in off-thread
@@ -39,7 +41,7 @@ import java.util.Objects;
  *
  * <p>Object pooling should be used to avoid huge allocations as this class contains many large arrays.</p>
  */
-public final class WorldSlice implements BlockRenderView, RenderAttachedBlockView, BiomeColorView {
+public final class WorldSlice implements BlockAndTintGetter, RenderAttachedBlockView, BiomeColorView {
     private static final LightType[] LIGHT_TYPES = LightType.values();
 
     // The number of blocks in a section.
@@ -95,11 +97,8 @@ public final class WorldSlice implements BlockRenderView, RenderAttachedBlockVie
             return null;
         }
 
-        BlockBox volume = new BlockBox(origin.getMinX() - NEIGHBOR_BLOCK_RADIUS,
-                origin.getMinY() - NEIGHBOR_BLOCK_RADIUS,
-                origin.getMinZ() - NEIGHBOR_BLOCK_RADIUS,
-                origin.getMaxX() + NEIGHBOR_BLOCK_RADIUS,
-                origin.getMaxY() + NEIGHBOR_BLOCK_RADIUS,
+        BlockBox volume = new BlockBox(origin.getMinX() - NEIGHBOR_BLOCK_RADIUS, origin.getMinY() - NEIGHBOR_BLOCK_RADIUS,
+                origin.getMinZ() - NEIGHBOR_BLOCK_RADIUS, origin.getMaxX() + NEIGHBOR_BLOCK_RADIUS, origin.getMaxY() + NEIGHBOR_BLOCK_RADIUS,
                 origin.getMaxZ() + NEIGHBOR_BLOCK_RADIUS);
 
         // The min/max bounds of the chunks copied by this slice
@@ -116,8 +115,7 @@ public final class WorldSlice implements BlockRenderView, RenderAttachedBlockVie
         for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
                 for (int chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
-                    sections[getLocalSectionIndex(chunkX - minChunkX, chunkY - minChunkY, chunkZ - minChunkZ)] =
-                            sectionCache.acquire(chunkX, chunkY, chunkZ);
+                    sections[getLocalSectionIndex(chunkX - minChunkX, chunkY - minChunkY, chunkZ - minChunkZ)] = sectionCache.acquire(chunkX, chunkY, chunkZ);
                 }
             }
         }
@@ -181,7 +179,7 @@ public final class WorldSlice implements BlockRenderView, RenderAttachedBlockVie
         ChunkSectionPos origin = context.getOrigin();
         ChunkSectionPos pos = section.getPosition();
 
-        if (origin.equals(pos))  {
+        if (origin.equals(pos)) {
             container.sodium$unpack(blockArray);
         } else {
             var bounds = context.getVolume();
@@ -195,8 +193,7 @@ public final class WorldSlice implements BlockRenderView, RenderAttachedBlockVie
             int minBlockZ = Math.max(bounds.getMinZ(), pos.getMinZ());
             int maxBlockZ = Math.min(bounds.getMaxZ(), pos.getMaxZ());
 
-            container.sodium$unpack(blockArray, minBlockX & 15, minBlockY & 15, minBlockZ & 15,
-                    maxBlockX & 15, maxBlockY & 15, maxBlockZ & 15);
+            container.sodium$unpack(blockArray, minBlockX & 15, minBlockY & 15, minBlockZ & 15, maxBlockX & 15, maxBlockY & 15, maxBlockZ & 15);
         }
     }
 
@@ -222,14 +219,12 @@ public final class WorldSlice implements BlockRenderView, RenderAttachedBlockVie
         int relY = y - this.originY;
         int relZ = z - this.originZ;
 
-        return this.blockArrays[getLocalSectionIndex(relX >> 4, relY >> 4, relZ >> 4)]
-                [getLocalBlockIndex(relX & 15, relY & 15, relZ & 15)];
+        return this.blockArrays[getLocalSectionIndex(relX >> 4, relY >> 4, relZ >> 4)][getLocalBlockIndex(relX & 15, relY & 15, relZ & 15)];
     }
 
     @Override
     public FluidState getFluidState(BlockPos pos) {
-        return this.getBlockState(pos)
-                .getFluidState();
+        return this.getBlockState(pos).getFluidState();
     }
 
     @Override

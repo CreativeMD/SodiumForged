@@ -1,7 +1,7 @@
 package me.jellysquid.mods.sodium.client.model.quad.properties;
 
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
 
 public class ModelQuadFlags {
     /**
@@ -59,7 +59,7 @@ public class ModelQuadFlags {
             case Z -> minX >= 0.0001f || minY >= 0.0001f || maxX <= 0.9999F || maxY <= 0.9999F;
         };
 
-        boolean parallel = switch(face.getAxis()) {
+        boolean parallel = switch (face.getAxis()) {
             case X -> minX == maxX;
             case Y -> minY == maxY;
             case Z -> minZ == maxZ;

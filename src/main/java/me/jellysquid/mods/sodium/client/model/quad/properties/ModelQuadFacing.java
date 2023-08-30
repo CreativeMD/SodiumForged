@@ -1,6 +1,6 @@
 package me.jellysquid.mods.sodium.client.model.quad.properties;
 
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
 
 public enum ModelQuadFacing {
     POS_X,
@@ -20,12 +20,12 @@ public enum ModelQuadFacing {
 
     public static ModelQuadFacing fromDirection(Direction dir) {
         return switch (dir) {
-            case DOWN   -> NEG_Y;
-            case UP     -> POS_Y;
-            case NORTH  -> NEG_Z;
-            case SOUTH  -> POS_Z;
-            case WEST   -> NEG_X;
-            case EAST   -> POS_X;
+            case DOWN -> NEG_Y;
+            case UP -> POS_Y;
+            case NORTH -> NEG_Z;
+            case SOUTH -> POS_Z;
+            case WEST -> NEG_X;
+            case EAST -> POS_X;
         };
     }
 

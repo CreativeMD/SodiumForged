@@ -1,11 +1,15 @@
 package me.jellysquid.mods.sodium.client.model.light.smooth;
 
-import me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.getLightmap;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackAO;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackEM;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackFO;
+import static me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess.unpackOP;
 
-import static me.jellysquid.mods.sodium.client.model.light.data.ArrayLightDataCache.*;
+import me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 class AoFaceData {
     public final int[] lm = new int[4];
@@ -26,9 +30,9 @@ class AoFaceData {
         final int adjZ;
 
         if (offset) {
-            adjX = x + direction.getOffsetX();
-            adjY = y + direction.getOffsetY();
-            adjZ = z + direction.getOffsetZ();
+            adjX = x + direction.getStepX();
+            adjY = y + direction.getStepY();
+            adjZ = z + direction.getStepZ();
         } else {
             adjX = x;
             adjY = y;
@@ -220,16 +224,16 @@ class AoFaceData {
         // FIX: Apply the fullbright lightmap from emissive blocks at the very end so it cannot influence
         // the minimum lightmap and produce incorrect results (for example, sculk sensors in a dark room)
         if (aem) {
-            a = LightmapTextureManager.MAX_LIGHT_COORDINATE;
+            a = LightTexture.FULL_BRIGHT;
         }
         if (bem) {
-            b = LightmapTextureManager.MAX_LIGHT_COORDINATE;
+            b = LightTexture.FULL_BRIGHT;
         }
         if (cem) {
-            c = LightmapTextureManager.MAX_LIGHT_COORDINATE;
+            c = LightTexture.FULL_BRIGHT;
         }
         if (dem) {
-            d = LightmapTextureManager.MAX_LIGHT_COORDINATE;
+            d = LightTexture.FULL_BRIGHT;
         }
 
         return ((a + b + c + d) >> 2) & 0xFF00FF;

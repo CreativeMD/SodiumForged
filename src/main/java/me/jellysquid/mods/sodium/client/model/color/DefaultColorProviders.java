@@ -1,20 +1,21 @@
 package me.jellysquid.mods.sodium.client.model.color;
 
-import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
-import me.jellysquid.mods.sodium.client.model.quad.blender.BlendedColorProvider;
-import me.jellysquid.mods.sodium.client.world.biome.BiomeColorSource;
-import me.jellysquid.mods.sodium.client.world.WorldSlice;
-import net.caffeinemc.mods.sodium.api.util.ColorARGB;
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
-import net.minecraft.block.BlockState;
-import net.minecraft.client.color.block.BlockColorProvider;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.Arrays;
 
+import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
+import me.jellysquid.mods.sodium.client.model.quad.blender.BlendedColorProvider;
+import me.jellysquid.mods.sodium.client.world.WorldSlice;
+import me.jellysquid.mods.sodium.client.world.biome.BiomeColorSource;
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
+import net.minecraft.client.color.block.BlockColor;
+import net.minecraft.client.renderer.block.LiquidBlockRenderer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
+
 public class DefaultColorProviders {
-    public static ColorProvider<BlockState> adapt(BlockColorProvider provider) {
+    public static ColorProvider<BlockState> adapt(BlockColor provider) {
         return new VanillaAdapter(provider);
     }
 
@@ -63,9 +64,9 @@ public class DefaultColorProviders {
     }
 
     private static class VanillaAdapter implements ColorProvider<BlockState> {
-        private final BlockColorProvider provider;
+        private final BlockColor provider;
 
-        private VanillaAdapter(BlockColorProvider provider) {
+        private VanillaAdapter(BlockColor provider) {
             this.provider = provider;
         }
 
@@ -76,7 +77,7 @@ public class DefaultColorProviders {
     }
 
     private static class FabricFluidAdapter implements ColorProvider<FluidState> {
-        private final FluidRenderHandler handler;
+        private final LiquidBlockRenderer handler;
 
         public FabricFluidAdapter(FluidRenderHandler handler) {
             this.handler = handler;
