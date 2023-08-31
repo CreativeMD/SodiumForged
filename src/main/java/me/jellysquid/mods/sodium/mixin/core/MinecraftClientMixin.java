@@ -1,11 +1,5 @@
 package me.jellysquid.mods.sodium.mixin.core;
 
-import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
-import me.jellysquid.mods.sodium.client.SodiumClientMod;
-import me.jellysquid.mods.sodium.client.gui.screen.ConfigCorruptedScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.RunArgs;
-import net.minecraft.util.profiler.Profiler;
 import org.lwjgl.opengl.GL32C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -13,16 +7,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MinecraftClient.class)
+import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
+import me.jellysquid.mods.sodium.client.SodiumClientMod;
+import me.jellysquid.mods.sodium.client.gui.screen.ConfigCorruptedScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.main.GameConfig;
+import net.minecraft.util.profiling.ProfilerFiller;
+
+@Mixin(Minecraft.class)
 public class MinecraftClientMixin {
     @Unique
     private final LongArrayFIFOQueue fences = new LongArrayFIFOQueue();
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void postInit(RunArgs args, CallbackInfo ci) {
+    private void postInit(GameConfig args, CallbackInfo ci) {
         if (SodiumClientMod.options().isReadOnly()) {
-            var parent = MinecraftClient.getInstance().currentScreen;
-            MinecraftClient.getInstance().setScreen(new ConfigCorruptedScreen(() -> parent));
+            var parent = Minecraft.getInstance().screen;
+            Minecraft.getInstance().setScreen(new ConfigCorruptedScreen(() -> parent));
         }
     }
 
@@ -30,9 +31,9 @@ public class MinecraftClientMixin {
      * We run this at the beginning of the frame (except for the first frame) to give the previous frame plenty of time
      * to render on the GPU. This allows us to stall on ClientWaitSync for less time.
      */
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "runTick", at = @At("HEAD"))
     private void preRender(boolean tick, CallbackInfo ci) {
-        Profiler profiler = MinecraftClient.getInstance().getProfiler();
+        ProfilerFiller profiler = Minecraft.getInstance().getProfiler();
         profiler.push("wait_for_gpu");
 
         while (this.fences.size() > SodiumClientMod.options().advanced.cpuRenderAheadLimit) {
@@ -61,7 +62,7 @@ public class MinecraftClientMixin {
         profiler.pop();
     }
 
-    @Inject(method = "render", at = @At("RETURN"))
+    @Inject(method = "runTick", at = @At("RETURN"))
     private void postRender(boolean tick, CallbackInfo ci) {
         var fence = GL32C.glFenceSync(GL32C.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 

@@ -1,12 +1,5 @@
 package me.jellysquid.mods.sodium.mixin.core.render.immediate.consumer;
 
-import net.caffeinemc.mods.sodium.api.vertex.attributes.CommonVertexAttribute;
-import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.minecraft.client.render.SpriteTexturedVertexConsumer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.texture.Sprite;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +9,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(SpriteTexturedVertexConsumer.class)
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import net.caffeinemc.mods.sodium.api.vertex.attributes.CommonVertexAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.attributes.common.TextureAttribute;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import net.minecraft.client.renderer.SpriteCoordinateExpander;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+
+@Mixin(SpriteCoordinateExpander.class)
 public class SpriteTexturedVertexConsumerMixin implements VertexBufferWriter {
     @Shadow
     @Final
@@ -29,21 +31,19 @@ public class SpriteTexturedVertexConsumerMixin implements VertexBufferWriter {
     private float maxU, maxV;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(VertexConsumer delegate, Sprite sprite, CallbackInfo ci) {
-        this.minU = sprite.getMinU();
-        this.minV = sprite.getMinV();
+    private void onInit(VertexConsumer delegate, TextureAtlasSprite sprite, CallbackInfo ci) {
+        this.minU = sprite.getU0();
+        this.minV = sprite.getV0();
 
-        this.maxU = sprite.getMaxU();
-        this.maxV = sprite.getMaxV();
+        this.maxU = sprite.getU1();
+        this.maxV = sprite.getV1();
     }
 
     @Override
     public void push(MemoryStack stack, final long ptr, int count, VertexFormatDescription format) {
-        transform(ptr, count, format,
-                this.minU, this.minV, this.maxU, this.maxV);
+        transform(ptr, count, format, this.minU, this.minV, this.maxU, this.maxV);
 
-        VertexBufferWriter.of(this.delegate)
-                .push(stack, ptr, count, format);
+        VertexBufferWriter.of(this.delegate).push(stack, ptr, count, format);
     }
 
     /**
@@ -59,8 +59,7 @@ public class SpriteTexturedVertexConsumerMixin implements VertexBufferWriter {
      * @param maxV   The maximum Y-coordinate of the sprite bounds
      */
     @Unique
-    private static void transform(long ptr, int count, VertexFormatDescription format,
-                                  float minU, float minV, float maxU, float maxV) {
+    private static void transform(long ptr, int count, VertexFormatDescription format, float minU, float minV, float maxU, float maxV) {
         long stride = format.stride();
         long offsetUV = format.getElementOffset(CommonVertexAttribute.TEXTURE);
 

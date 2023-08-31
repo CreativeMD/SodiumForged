@@ -1,16 +1,17 @@
 package me.jellysquid.mods.sodium.mixin.core.render.immediate.consumer;
 
-
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.minecraft.client.render.VertexConsumer;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+
 public class VertexConsumersMixin {
-    @Mixin(targets = "net/minecraft/client/render/VertexConsumers$Dual")
+    @Mixin(targets = "com/mojang/blaze3d/vertex/VertexMultiConsumer$Double")
     public static class DualMixin implements VertexBufferWriter {
         @Shadow
         @Final
@@ -27,7 +28,7 @@ public class VertexConsumersMixin {
         }
     }
 
-    @Mixin(targets = "net/minecraft/client/render/VertexConsumers$Union")
+    @Mixin(targets = "com/mojang/blaze3d/vertex/VertexMultiConsumer$Multiple")
     public static class UnionMixin implements VertexBufferWriter {
         @Shadow
         @Final

@@ -1,12 +1,7 @@
 package me.jellysquid.mods.sodium.mixin.core.render.immediate.consumer;
 
-import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
-import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
-import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializerRegistry;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.VertexFormat;
+import java.nio.ByteBuffer;
+
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.objectweb.asm.Opcodes;
@@ -17,7 +12,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.nio.ByteBuffer;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexFormat;
+
+import net.caffeinemc.mods.sodium.api.memory.MemoryIntrinsics;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatDescription;
+import net.caffeinemc.mods.sodium.api.vertex.format.VertexFormatRegistry;
+import net.caffeinemc.mods.sodium.api.vertex.serializer.VertexSerializerRegistry;
 
 @Mixin(BufferBuilder.class)
 public abstract class BufferBuilderMixin implements VertexBufferWriter {
@@ -25,13 +27,13 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter {
     private ByteBuffer buffer;
 
     @Shadow
-    private int vertexCount;
+    private int vertices;
 
     @Shadow
-    private int elementOffset;
+    private int nextElementByte;
 
     @Shadow
-    protected abstract void grow(int size);
+    protected abstract void ensureCapacity(int size);
 
     @Unique
     private VertexFormatDescription format;
@@ -39,17 +41,10 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter {
     @Unique
     private int stride;
 
-    @Inject(method = "setFormat",
-        at = @At(
-            value = "FIELD",
-            target = "Lnet/minecraft/client/render/BufferBuilder;format:Lnet/minecraft/client/render/VertexFormat;",
-            opcode = Opcodes.PUTFIELD
-        )
-    )
+    @Inject(method = "switchFormat", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;switchFormat:Lcom/mojang/blaze3d/vertex/VertexFormat;", opcode = Opcodes.PUTFIELD))
     private void onFormatChanged(VertexFormat format, CallbackInfo ci) {
-        this.format = VertexFormatRegistry.instance()
-                .get(format);
-        this.stride = format.getVertexSizeByte();
+        this.format = VertexFormatRegistry.instance().get(format);
+        this.stride = format.getVertexSize();
     }
 
     @Override
@@ -57,11 +52,11 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter {
         var length = count * this.stride;
 
         // Ensure that there is always space for 1 more vertex; see BufferBuilder.next()
-        this.grow(length + this.stride);
+        this.ensureCapacity(length + this.stride);
 
         // The buffer may change in the even, so we need to make sure that the
         // pointer is retrieved *after* the resize
-        var dst = MemoryUtil.memAddress(this.buffer, this.elementOffset);
+        var dst = MemoryUtil.memAddress(this.buffer, this.nextElementByte);
 
         if (format == this.format) {
             // The layout is the same, so we can just perform a memory copy
@@ -72,14 +67,12 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter {
             this.copySlow(src, dst, count, format);
         }
 
-        this.vertexCount += count;
-        this.elementOffset += length;
+        this.vertices += count;
+        this.nextElementByte += length;
     }
 
     @Unique
     private void copySlow(long src, long dst, int count, VertexFormatDescription format) {
-        VertexSerializerRegistry.instance()
-                .get(format, this.format)
-                .serialize(src, dst, count);
+        VertexSerializerRegistry.instance().get(format, this.format).serialize(src, dst, count);
     }
 }
