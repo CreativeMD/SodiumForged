@@ -1,23 +1,25 @@
 package me.jellysquid.mods.sodium.mixin.features.gui.hooks.debug;
 
-import com.google.common.collect.Lists;
-import me.jellysquid.mods.sodium.client.SodiumClientMod;
-import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
-import me.jellysquid.mods.sodium.client.util.MathUtil;
-import me.jellysquid.mods.sodium.client.util.NativeBuffer;
-import net.minecraft.client.gui.hud.DebugHud;
-import net.minecraft.util.Formatting;
+import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
+import com.google.common.collect.Lists;
 
-@Mixin(DebugHud.class)
+import me.jellysquid.mods.sodium.client.SodiumClientMod;
+import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
+import me.jellysquid.mods.sodium.client.util.MathUtil;
+import me.jellysquid.mods.sodium.client.util.NativeBuffer;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.components.DebugScreenOverlay;
+
+@Mixin(DebugScreenOverlay.class)
 public abstract class DebugHudMixin {
-    @Redirect(method = "getRightText", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList([Ljava/lang/Object;)Ljava/util/ArrayList;", remap = false))
+    @Redirect(method = "getSystemInformation", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayList([Ljava/lang/Object;)Ljava/util/ArrayList;", remap = false))
     private ArrayList<String> redirectRightTextEarly(Object[] elements) {
         ArrayList<String> strings = Lists.newArrayList((String[]) elements);
         strings.add("");
@@ -43,14 +45,14 @@ public abstract class DebugHudMixin {
     }
 
     @Unique
-    private static Formatting getVersionColor() {
+    private static ChatFormatting getVersionColor() {
         String version = SodiumClientMod.getVersion();
-        Formatting color;
+        ChatFormatting color;
 
         if (version.contains("+git.")) {
-            color = Formatting.RED;
+            color = ChatFormatting.RED;
         } else {
-            color = Formatting.GREEN;
+            color = ChatFormatting.GREEN;
         }
 
         return color;

@@ -1,22 +1,26 @@
 package me.jellysquid.mods.sodium.mixin.features.render.immediate.matrix_stack;
 
-import net.minecraft.client.util.math.MatrixStack;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
-import org.spongepowered.asm.mixin.*;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-@Mixin(MatrixStack.class)
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+
+@Mixin(PoseStack.class)
 public abstract class MatrixStackMixin {
     @Shadow
     @Final
-    private Deque<MatrixStack.Entry> stack;
+    private Deque<PoseStack.Pose> poseStack;
 
     @Unique
-    private final Deque<MatrixStack.Entry> cache = new ArrayDeque<>();
-
+    private final Deque<PoseStack.Pose> cache = new ArrayDeque<>();
 
     /**
      * @author JellySquid
@@ -24,21 +28,19 @@ public abstract class MatrixStackMixin {
      */
     @Overwrite
     public void push() {
-        var prev = this.stack.getLast();
+        var prev = this.poseStack.getLast();
 
-        MatrixStack.Entry entry;
+        PoseStack.Pose entry;
 
         if (!this.cache.isEmpty()) {
             entry = this.cache.removeLast();
-            entry.getPositionMatrix()
-                    .set(prev.getPositionMatrix());
-            entry.getNormalMatrix()
-                    .set(prev.getNormalMatrix());
+            entry.pose().set(prev.pose());
+            entry.normal().set(prev.normal());
         } else {
-            entry = new MatrixStack.Entry(new Matrix4f(prev.getPositionMatrix()), new Matrix3f(prev.getNormalMatrix()));
+            entry = new PoseStack.Pose(new Matrix4f(prev.pose()), new Matrix3f(prev.normal()));
         }
 
-        this.stack.addLast(entry);
+        this.poseStack.addLast(entry);
     }
 
     /**
@@ -47,6 +49,6 @@ public abstract class MatrixStackMixin {
      */
     @Overwrite
     public void pop() {
-        this.cache.addLast(this.stack.removeLast());
+        this.cache.addLast(this.poseStack.removeLast());
     }
 }

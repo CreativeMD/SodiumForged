@@ -1,15 +1,5 @@
 package me.jellysquid.mods.sodium.mixin.features.render.particle;
 
-import net.caffeinemc.mods.sodium.api.vertex.format.common.ParticleVertex;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
-import net.minecraft.client.particle.BillboardParticle;
-import net.minecraft.client.particle.Particle;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import org.joml.Quaternionf;
 import org.lwjgl.system.MemoryStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,24 +7,36 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(BillboardParticle.class)
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import net.caffeinemc.mods.sodium.api.util.ColorABGR;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.ParticleVertex;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.SingleQuadParticle;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+
+@Mixin(SingleQuadParticle.class)
 public abstract class BillboardParticleMixin extends Particle {
     @Shadow
-    public abstract float getSize(float tickDelta);
+    public abstract float getQuadSize(float tickDelta);
 
     @Shadow
-    protected abstract float getMinU();
+    protected abstract float getU0();
 
     @Shadow
-    protected abstract float getMaxU();
+    protected abstract float getU1();
 
     @Shadow
-    protected abstract float getMinV();
+    protected abstract float getV0();
 
     @Shadow
-    protected abstract float getMaxV();
+    protected abstract float getV1();
 
-    protected BillboardParticleMixin(ClientWorld world, double x, double y, double z) {
+    protected BillboardParticleMixin(ClientLevel world, double x, double y, double z) {
         super(world, x, y, z);
     }
 
@@ -42,34 +44,35 @@ public abstract class BillboardParticleMixin extends Particle {
      * @reason Optimize function
      * @author JellySquid
      */
+    @Override
     @Overwrite
-    public void buildGeometry(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
-        Vec3d vec3d = camera.getPos();
+    public void render(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
+        Vec3 vec3d = camera.getPosition();
 
-        float x = (float) (MathHelper.lerp(tickDelta, this.prevPosX, this.x) - vec3d.getX());
-        float y = (float) (MathHelper.lerp(tickDelta, this.prevPosY, this.y) - vec3d.getY());
-        float z = (float) (MathHelper.lerp(tickDelta, this.prevPosZ, this.z) - vec3d.getZ());
+        float x = (float) (Mth.lerp(tickDelta, this.xo, this.x) - vec3d.x());
+        float y = (float) (Mth.lerp(tickDelta, this.yo, this.y) - vec3d.y());
+        float z = (float) (Mth.lerp(tickDelta, this.zo, this.z) - vec3d.z());
 
         Quaternionf quaternion;
 
-        if (this.angle == 0.0F) {
-            quaternion = camera.getRotation();
+        if (this.roll == 0.0F) {
+            quaternion = camera.rotation();
         } else {
-            float angle = MathHelper.lerp(tickDelta, this.prevAngle, this.angle);
+            float angle = Mth.lerp(tickDelta, this.oRoll, this.roll);
 
-            quaternion = new Quaternionf(camera.getRotation());
+            quaternion = new Quaternionf(camera.rotation());
             quaternion.rotateZ(angle);
         }
 
-        float size = this.getSize(tickDelta);
-        int light = this.getBrightness(tickDelta);
+        float size = this.getQuadSize(tickDelta);
+        int light = this.getLightColor(tickDelta);
 
-        float minU = this.getMinU();
-        float maxU = this.getMaxU();
-        float minV = this.getMinV();
-        float maxV = this.getMaxV();
+        float minU = this.getU0();
+        float maxU = this.getU1();
+        float minV = this.getV0();
+        float maxV = this.getV1();
 
-        int color = ColorABGR.pack(this.red , this.green, this.blue, this.alpha);
+        int color = ColorABGR.pack(this.rCol, this.gCol, this.bCol, this.alpha);
 
         var writer = VertexBufferWriter.of(vertexConsumer);
 
@@ -77,16 +80,16 @@ public abstract class BillboardParticleMixin extends Particle {
             long buffer = stack.nmalloc(4 * ParticleVertex.STRIDE);
             long ptr = buffer;
 
-            writeVertex(ptr, quaternion,-1.0F, -1.0F, x, y, z, maxU, maxV, color, light, size);
+            writeVertex(ptr, quaternion, -1.0F, -1.0F, x, y, z, maxU, maxV, color, light, size);
             ptr += ParticleVertex.STRIDE;
 
-            writeVertex(ptr, quaternion,-1.0F, 1.0F, x, y, z, maxU, minV, color, light, size);
+            writeVertex(ptr, quaternion, -1.0F, 1.0F, x, y, z, maxU, minV, color, light, size);
             ptr += ParticleVertex.STRIDE;
 
-            writeVertex(ptr, quaternion,1.0F, 1.0F, x, y, z, minU, minV, color, light, size);
+            writeVertex(ptr, quaternion, 1.0F, 1.0F, x, y, z, minU, minV, color, light, size);
             ptr += ParticleVertex.STRIDE;
 
-            writeVertex(ptr, quaternion,1.0F, -1.0F, x, y, z, minU, maxV, color, light, size);
+            writeVertex(ptr, quaternion, 1.0F, -1.0F, x, y, z, minU, maxV, color, light, size);
             ptr += ParticleVertex.STRIDE;
 
             writer.push(stack, buffer, 4, ParticleVertex.FORMAT);
@@ -96,11 +99,7 @@ public abstract class BillboardParticleMixin extends Particle {
 
     @Unique
     @SuppressWarnings("UnnecessaryLocalVariable")
-    private static void writeVertex(long buffer,
-                                    Quaternionf rotation,
-                                    float posX, float posY,
-                                    float originX, float originY, float originZ,
-                                    float u, float v, int color, int light, float size) {
+    private static void writeVertex(long buffer, Quaternionf rotation, float posX, float posY, float originX, float originY, float originZ, float u, float v, int color, int light, float size) {
         // Quaternion q0 = new Quaternion(rotation);
         float q0x = rotation.x();
         float q0y = rotation.y();

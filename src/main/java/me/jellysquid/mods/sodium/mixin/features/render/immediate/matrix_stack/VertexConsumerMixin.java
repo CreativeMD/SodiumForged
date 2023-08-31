@@ -1,13 +1,14 @@
 package me.jellysquid.mods.sodium.mixin.features.render.immediate.matrix_stack;
 
-import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
-import net.minecraft.client.render.VertexConsumer;
-
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import net.caffeinemc.mods.sodium.api.math.MatrixHelper;
 
 @Mixin(VertexConsumer.class)
 public interface VertexConsumerMixin {

@@ -1,13 +1,5 @@
 package me.jellysquid.mods.sodium.mixin.features.render.gui.outlines;
 
-import net.caffeinemc.mods.sodium.api.vertex.format.common.LineVertex;
-import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
-import net.caffeinemc.mods.sodium.api.util.NormI8;
-import net.caffeinemc.mods.sodium.api.util.ColorABGR;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-
 import org.joml.Math;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -16,18 +8,25 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(WorldRenderer.class)
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+
+import net.caffeinemc.mods.sodium.api.util.ColorABGR;
+import net.caffeinemc.mods.sodium.api.util.NormI8;
+import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
+import net.caffeinemc.mods.sodium.api.vertex.format.common.LineVertex;
+import net.minecraft.client.renderer.LevelRenderer;
+
+@Mixin(LevelRenderer.class)
 public class WorldRendererMixin {
     /**
      * @author JellySquid
      * @reason Use intrinsics where possible to speed up vertex writing
      */
     @Overwrite
-    public static void drawBox(MatrixStack matrices, VertexConsumer vertexConsumer, double x1, double y1, double z1,
-                               double x2, double y2, double z2, float red, float green, float blue, float alpha,
-                               float xAxisRed, float yAxisGreen, float zAxisBlue) {
-        Matrix4f position = matrices.peek().getPositionMatrix();
-        Matrix3f normal = matrices.peek().getNormalMatrix();
+    public static void renderLineBox(PoseStack matrices, VertexConsumer vertexConsumer, double x1, double y1, double z1, double x2, double y2, double z2, float red, float green, float blue, float alpha, float xAxisRed, float yAxisGreen, float zAxisBlue) {
+        Matrix4f position = matrices.last().pose();
+        Matrix3f normal = matrices.last().normal();
 
         float x1f = (float) x1;
         float y1f = (float) y1;

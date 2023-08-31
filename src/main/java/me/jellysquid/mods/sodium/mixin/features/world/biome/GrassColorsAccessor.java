@@ -1,12 +1,13 @@
 package me.jellysquid.mods.sodium.mixin.features.world.biome;
 
-import net.minecraft.client.color.world.GrassColors;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(GrassColors.class)
+import net.minecraft.world.level.GrassColor;
+
+@Mixin(GrassColor.class)
 public interface GrassColorsAccessor {
-    @Accessor
+    @Accessor("pixels")
     static int[] getColorMap() {
         throw new AssertionError();
     }

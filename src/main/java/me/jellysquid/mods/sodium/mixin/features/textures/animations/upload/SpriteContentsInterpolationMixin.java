@@ -1,23 +1,29 @@
 package me.jellysquid.mods.sodium.mixin.features.textures.animations.upload;
 
-import me.jellysquid.mods.sodium.client.util.NativeImageHelper;
-import me.jellysquid.mods.sodium.mixin.features.textures.SpriteContentsInvoker;
-import net.caffeinemc.mods.sodium.api.util.ColorMixer;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.SpriteContents;
+import java.util.List;
+
 import org.lwjgl.system.MemoryUtil;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
+import com.mojang.blaze3d.platform.NativeImage;
 
-@Mixin(SpriteContents.Interpolation.class)
+import me.jellysquid.mods.sodium.client.util.NativeImageHelper;
+import me.jellysquid.mods.sodium.mixin.features.textures.SpriteContentsInvoker;
+import net.caffeinemc.mods.sodium.api.util.ColorMixer;
+import net.minecraft.client.renderer.texture.SpriteContents;
+
+@Mixin(SpriteContents.InterpolationData.class)
 public class SpriteContentsInterpolationMixin {
     @Shadow
     @Final
-    private NativeImage[] images;
+    private NativeImage[] activeFrame;
 
     @Unique
     private SpriteContents parent;
@@ -39,10 +45,10 @@ public class SpriteContentsInterpolationMixin {
      * @reason Drastic optimizations
      */
     @Overwrite
-    void apply(int x, int y, SpriteContents.AnimatorImpl arg) {
-        SpriteContents.Animation animation = ((SpriteContentsAnimatorImplAccessor) arg).getAnimation();
+    void apply(int x, int y, SpriteContents.Ticker arg) {
+        SpriteContents.AnimatedTexture animation = ((SpriteContentsAnimatorImplAccessor) arg).getAnimation();
         SpriteContentsAnimationAccessor animation2 = (SpriteContentsAnimationAccessor) ((SpriteContentsAnimatorImplAccessor) arg).getAnimation();
-        List<SpriteContents.AnimationFrame> frames = ((SpriteContentsAnimationAccessor) animation).getFrames();
+        List<SpriteContents.FrameInfo> frames = ((SpriteContentsAnimationAccessor) animation).getFrames();
         SpriteContentsAnimatorImplAccessor accessor = (SpriteContentsAnimatorImplAccessor) arg;
         SpriteContentsAnimationFrameAccessor animationFrame = (SpriteContentsAnimationFrameAccessor) frames.get(accessor.getFrameIndex());
 
@@ -56,9 +62,9 @@ public class SpriteContentsInterpolationMixin {
         // The mix factor between the current and next frame
         float mix = 1.0F - (float) accessor.getFrameTicks() / (float) animationFrame.getTime();
 
-        for (int layer = 0; layer < this.images.length; layer++) {
-            int width = this.parent.getWidth() >> layer;
-            int height = this.parent.getHeight() >> layer;
+        for (int layer = 0; layer < this.activeFrame.length; layer++) {
+            int width = this.parent.width() >> layer;
+            int height = this.parent.height() >> layer;
 
             int curX = ((curIndex % animation2.getFrameCount()) * width);
             int curY = ((curIndex / animation2.getFrameCount()) * height);
@@ -67,7 +73,7 @@ public class SpriteContentsInterpolationMixin {
             int nextY = ((nextIndex / animation2.getFrameCount()) * height);
 
             NativeImage src = ((SpriteContentsAccessor) this.parent).getImages()[layer];
-            NativeImage dst = this.images[layer];
+            NativeImage dst = this.activeFrame[layer];
 
             long ppSrcPixel = NativeImageHelper.getPointerRGBA(src);
             long ppDstPixel = NativeImageHelper.getPointerRGBA(dst);
@@ -96,6 +102,6 @@ public class SpriteContentsInterpolationMixin {
             }
         }
 
-        ((SpriteContentsInvoker) this.parent).invokeUpload(x, y, 0, 0, this.images);
+        ((SpriteContentsInvoker) this.parent).invokeUpload(x, y, 0, 0, this.activeFrame);
     }
 }
