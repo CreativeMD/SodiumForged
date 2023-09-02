@@ -9,7 +9,7 @@ import net.minecraft.world.entity.Entity;
 @Mixin(FogRenderer.class)
 public interface BackgroundRendererInvoker {
     @Invoker
-    static FogRenderer.MobEffectFogFunction invokeGetFogModifier(Entity entity, float tickDelta) {
+    static FogRenderer.MobEffectFogFunction invokeGetPriorityFogFunction(Entity entity, float tickDelta) {
         throw new AssertionError();
     }
 }

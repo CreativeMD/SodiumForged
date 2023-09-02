@@ -14,21 +14,21 @@ public abstract class SpriteContentsMixin implements SpriteContentsExtended {
     @Shadow
     @Final
     @Nullable
-    private SpriteContents.Animation animatedTexture;
-
+    private SpriteContents.AnimatedTexture animatedTexture;
+    
     @Unique
     private boolean active;
-
+    
     @Override
     public void sodium$setActive(boolean value) {
         this.active = value;
     }
-
+    
     @Override
     public boolean sodium$hasAnimation() {
         return this.animatedTexture != null;
     }
-
+    
     @Override
     public boolean sodium$isActive() {
         return this.active;
