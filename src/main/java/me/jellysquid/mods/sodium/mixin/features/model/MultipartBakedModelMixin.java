@@ -15,12 +15,15 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.MultiPartBakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.client.model.data.ModelData;
+import net.minecraftforge.client.model.data.MultipartModelData;
 
 @Mixin(MultiPartBakedModel.class)
 public class MultipartBakedModelMixin {
@@ -38,8 +41,8 @@ public class MultipartBakedModelMixin {
      * @reason Avoid expensive allocations and replace bitfield indirection
      */
     @Overwrite
-    public List<BakedQuad> getQuads(BlockState state, Direction face, RandomSource random) {
-        if (state == null) { This also needs to change for Forge
+    public List<BakedQuad> getQuads(BlockState state, Direction face, RandomSource random, ModelData modelData, RenderType layer) {
+        if (state == null) {
             return Collections.emptyList();
         }
 
@@ -75,7 +78,8 @@ public class MultipartBakedModelMixin {
 
         for (BakedModel model : models) {
             random.setSeed(seed);
-            quads.addAll(model.getQuads(state, face, random));
+            if (layer == null || model.getRenderTypes(state, random, modelData).contains(layer)) // FORGE: Only put quad data if the model is using the render type passed
+                quads.addAll(model.getQuads(state, face, random, MultipartModelData.resolve(modelData, model), layer));
         }
 
         return quads;

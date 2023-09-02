@@ -1,16 +1,20 @@
 package me.jellysquid.mods.sodium.mixin;
 
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import net.fabricmc.loader.api.metadata.CustomValue;
-import net.fabricmc.loader.api.metadata.ModMetadata;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import net.minecraftforge.fml.loading.LoadingModList;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 
 /**
  * Documentation of these options: https://github.com/jellysquid3/sodium-fabric/wiki/Configuration-File
@@ -128,38 +132,39 @@ public class MixinConfig {
     }
 
     private void applyModOverrides() {
-        for (ModContainer container : FabricLoader.getInstance().getAllMods()) {
-            ModMetadata meta = container.getMetadata();
+        for (ModInfo mod : LoadingModList.get().getMods()) {
+            mod.getConfigElement(JSON_KEY_SODIUM_OPTIONS).ifPresent(over -> {
+                if (over instanceof Map<?, ?> map) {
+                    for (Entry entry : map.entrySet()) {
+                        if (!options.containsKey(entry.getKey())) {
+                            LOGGER.warn("Mod '{}' contains invalid Sodium option overrides, ignoring", mod.getModId());
+                            continue;
+                        }
 
-            if (meta.containsCustomValue(JSON_KEY_SODIUM_OPTIONS)) {
-                CustomValue overrides = meta.getCustomValue(JSON_KEY_SODIUM_OPTIONS);
-
-                if (overrides.getType() != CustomValue.CvType.OBJECT) {
-                    LOGGER.warn("Mod '{}' contains invalid Sodium option overrides, ignoring", meta.getId());
-                    continue;
+                        applyModOverride(mod.getModId(), (String) entry.getKey(), entry.getValue());
+                    }
+                    return;
                 }
-
-                for (Map.Entry<String, CustomValue> entry : overrides.getAsObject()) {
-                    this.applyModOverride(meta, entry.getKey(), entry.getValue());
-                }
-            }
+                LOGGER.warn("Mod '{}' contains invalid Rubidium option overrides, ignoring", mod.getModId());
+            });
         }
     }
 
-    private void applyModOverride(ModMetadata meta, String name, CustomValue value) {
+    private void applyModOverride(String modid, String name, Object value) {
+        Boolean enabled;
         MixinOption option = this.options.get(name);
 
         if (option == null) {
-            LOGGER.warn("Mod '{}' attempted to override option '{}', which doesn't exist, ignoring", meta.getId(), name);
+            LOGGER.warn("Mod '{}' attempted to override option '{}', which doesn't exist, ignoring", modid, name);
             return;
         }
 
-        if (value.getType() != CustomValue.CvType.BOOLEAN) {
-            LOGGER.warn("Mod '{}' attempted to override option '{}' with an invalid value, ignoring", meta.getId(), name);
+        if (value instanceof Boolean) {
+            enabled = (Boolean) value;
+        } else {
+            LOGGER.warn("Mod '{}' attempted to override option '{}' with an invalid value, ignoring", modid, name);
             return;
         }
-
-        boolean enabled = value.getAsBoolean();
 
         // disabling the option takes precedence over enabling
         if (!enabled && option.isEnabled()) {
@@ -167,7 +172,7 @@ public class MixinConfig {
         }
 
         if (!enabled || option.isEnabled() || option.getDefiningMods().isEmpty()) {
-            option.addModOverride(enabled, meta.getId());
+            option.addModOverride(enabled, modid);
         }
     }
 
@@ -224,7 +229,7 @@ public class MixinConfig {
 
         Properties props = new Properties();
 
-        try (FileInputStream fin = new FileInputStream(file)){
+        try (FileInputStream fin = new FileInputStream(file)) {
             props.load(fin);
         } catch (IOException e) {
             throw new RuntimeException("Could not load config file", e);
@@ -267,9 +272,6 @@ public class MixinConfig {
     }
 
     public int getOptionOverrideCount() {
-        return (int) this.options.values()
-                .stream()
-                .filter(MixinOption::isOverridden)
-                .count();
+        return (int) this.options.values().stream().filter(MixinOption::isOverridden).count();
     }
 }

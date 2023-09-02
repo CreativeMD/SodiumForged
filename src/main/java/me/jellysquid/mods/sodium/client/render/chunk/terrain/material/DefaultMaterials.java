@@ -4,7 +4,6 @@ import me.jellysquid.mods.sodium.client.render.chunk.terrain.DefaultTerrainRende
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.material.parameters.AlphaCutoffParameter;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 
 public class DefaultMaterials {
@@ -12,11 +11,6 @@ public class DefaultMaterials {
     public static final Material CUTOUT = new Material(DefaultTerrainRenderPasses.CUTOUT, AlphaCutoffParameter.ONE_TENTH, false);
     public static final Material CUTOUT_MIPPED = new Material(DefaultTerrainRenderPasses.CUTOUT, AlphaCutoffParameter.ONE_TENTH, true);
     public static final Material TRANSLUCENT = new Material(DefaultTerrainRenderPasses.TRANSLUCENT, AlphaCutoffParameter.ZERO, true);
-
-    public static Material forBlockState(BlockState state) {
-        ERROR THIS SHOULD BE DONE DIFFERENT
-        return forRenderLayer(ItemBlockRenderTypes.getChunkRenderType(state));
-    }
 
     public static Material forFluidState(FluidState state) {
         return forRenderLayer(ItemBlockRenderTypes.getRenderLayer(state));

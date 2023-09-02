@@ -25,14 +25,14 @@ public class WorldRendererMixin {
     private @Nullable ClientLevel level;
     @Shadow
     private int ticks;
-    
+
     @Shadow
     @Final
     private Minecraft minecraft;
-    
+
     @Unique
     private CloudRenderer cloudRenderer;
-    
+
     /** @author jellysquid3
      * @reason Optimize cloud rendering */
     @Overwrite
@@ -40,17 +40,17 @@ public class WorldRendererMixin {
         if (this.cloudRenderer == null) {
             this.cloudRenderer = new CloudRenderer(this.minecraft.getResourceManager());
         }
-        
+
         this.cloudRenderer.render(this.level, this.minecraft.player, matrices, projectionMatrix, this.ticks, tickDelta, x, y, z);
     }
-    
+
     @Inject(method = "onResourceManagerReload(Lnet/minecraft/server/packs/resources/ResourceManager;)V", at = @At("RETURN"))
     private void onReload(ResourceManager manager, CallbackInfo ci) {
         if (this.cloudRenderer != null) {
             this.cloudRenderer.reloadTextures(manager);
         }
     }
-    
+
     @Inject(method = "allChanged()V", at = @At("RETURN"))
     private void onReload(CallbackInfo ci) {
         // will be re-allocated on next use
@@ -59,10 +59,9 @@ public class WorldRendererMixin {
             this.cloudRenderer = null;
         }
     }
-    
+
     @Inject(method = "close", at = @At("RETURN"))
     private void onClose(CallbackInfo ci) {
-        This injection does not exist
         // will never be re-allocated, as the renderer is shutting down
         if (this.cloudRenderer != null) {
             this.cloudRenderer.destroy();

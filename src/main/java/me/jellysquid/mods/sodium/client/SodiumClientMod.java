@@ -1,35 +1,39 @@
 package me.jellysquid.mods.sodium.client;
 
-import me.jellysquid.mods.sodium.client.gui.SodiumGameOptions;
-import me.jellysquid.mods.sodium.client.util.FlawlessFrames;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 
-public class SodiumClientMod implements ClientModInitializer {
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import me.jellysquid.mods.sodium.client.gui.SodiumGameOptions;
+import net.minecraftforge.fml.IExtensionPoint;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.network.NetworkConstants;
+
+@Mod(SodiumClientMod.MODID)
+public class SodiumClientMod {
+
+    public static final String MODID = "sodiumforged";
+    public static final Logger LOGGER = LogManager.getLogger(SodiumClientMod.MODID);
+
     private static SodiumGameOptions CONFIG;
-    private static Logger LOGGER;
 
     private static String MOD_VERSION;
 
-    @Override
-    public void onInitializeClient() {
-        ModContainer mod = FabricLoader.getInstance()
-                .getModContainer("sodium")
-                .orElseThrow(NullPointerException::new);
-
-        MOD_VERSION = mod.getMetadata()
-                .getVersion()
-                .getFriendlyString();
-
-        LOGGER = LoggerFactory.getLogger("Sodium");
+    public SodiumClientMod() {
+        SodiumPreLaunch.onPreLaunch();
+        MOD_VERSION = ModList.get().getModContainerById("rubidium").get().getModInfo().getVersion().toString();
+        ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
+                () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
+        //FlawlessFrames.onClientInitialization(); Feature has been removed till the mod is available for forge
         CONFIG = loadConfig();
+    }
 
-        FlawlessFrames.onClientInitialization();
+    public void onClientSetup(FMLClientSetupEvent event) {
+
     }
 
     public static SodiumGameOptions options() {

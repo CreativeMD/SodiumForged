@@ -13,7 +13,6 @@ import me.jellysquid.mods.sodium.client.world.biome.BiomeSlice;
 import me.jellysquid.mods.sodium.client.world.cloned.ChunkRenderContext;
 import me.jellysquid.mods.sodium.client.world.cloned.ClonedChunkSection;
 import me.jellysquid.mods.sodium.client.world.cloned.ClonedChunkSectionCache;
-import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachedBlockView;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -44,7 +43,7 @@ import net.minecraft.world.level.material.FluidState;
  *
  * <p>Object pooling should be used to avoid huge allocations as this class contains many large arrays.</p>
  */
-public final class WorldSlice implements BlockAndTintGetter, RenderAttachedBlockView, BiomeColorView {
+public final class WorldSlice implements BlockAndTintGetter/*, RenderAttachedBlockView*/, BiomeColorView {
     private static final LightLayer[] LIGHT_TYPES = LightLayer.values();
 
     // The number of blocks in a section.
@@ -66,7 +65,7 @@ public final class WorldSlice implements BlockAndTintGetter, RenderAttachedBlock
     private static final int LOCAL_XYZ_BITS = 4;
 
     // The world this slice has copied data from
-    private final ClientLevel world;
+    public final ClientLevel world;
 
     // The accessor used for fetching biome data from the slice
     private final BiomeSlice biomeSlice;
@@ -312,20 +311,20 @@ public final class WorldSlice implements BlockAndTintGetter, RenderAttachedBlock
         return this.world.getMinBuildHeight();
     }
 
-    @Override
+    /*@Override Removed because a system like this does not exist in forge
     public @Nullable Object getBlockEntityRenderAttachment(BlockPos pos) {
         int relX = pos.getX() - this.originX;
         int relY = pos.getY() - this.originY;
         int relZ = pos.getZ() - this.originZ;
-
+    
         var blockEntityAttachments = this.blockEntityAttachmentArrays[getLocalSectionIndex(relX >> 4, relY >> 4, relZ >> 4)];
-
+    
         if (blockEntityAttachments == null) {
             return null;
         }
-
+    
         return blockEntityAttachments.get(getLocalBlockIndex(relX & 15, relY & 15, relZ & 15));
-    }
+    }*/
 
     @Override
     public int getColor(BiomeColorSource source, int x, int y, int z) {

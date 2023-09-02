@@ -6,11 +6,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
-import it.unimi.dsi.fastutil.ints.Int2ReferenceMaps;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import me.jellysquid.mods.sodium.client.world.ReadableContainerExtended;
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
-import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachmentBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.SectionPos;
@@ -56,9 +54,9 @@ public class ClonedChunkSection {
                 blockData = ReadableContainerExtended.clone(section.getStates());
                 blockEntityMap = copyBlockEntities(chunk, pos);
 
-                if (blockEntityMap != null) {
+                /*if (blockEntityMap != null) { Removed because a system like this does not exist in forge
                     blockEntityAttachmentMap = copyBlockEntityAttachments(blockEntityMap);
-                }
+                }*/
             }
 
             biomeData = ReadableContainerExtended.clone(section.getBiomes());
@@ -128,10 +126,10 @@ public class ClonedChunkSection {
         return blockEntities;
     }
 
-    @Nullable
+    /*@Nullable Removed because a system like this does not exist in forge
     private static Int2ReferenceMap<Object> copyBlockEntityAttachments(Int2ReferenceMap<BlockEntity> blockEntities) {
         Int2ReferenceOpenHashMap<Object> blockEntityAttachments = null;
-
+    
         // Retrieve any render attachments after we have copied all block entities, as this will call into the code of
         // other mods. This could potentially result in the chunk being modified, which would cause problems if we
         // were iterating over any data in that chunk.
@@ -141,13 +139,13 @@ public class ClonedChunkSection {
                 if (blockEntityAttachments == null) {
                     blockEntityAttachments = new Int2ReferenceOpenHashMap<>();
                 }
-
+    
                 blockEntityAttachments.put(entry.getIntKey(), holder.getRenderAttachmentData());
             }
         }
-
+    
         return blockEntityAttachments;
-    }
+    }*/
 
     public SectionPos getPosition() {
         return this.pos;

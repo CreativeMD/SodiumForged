@@ -4,10 +4,12 @@ import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import me.jellysquid.mods.sodium.client.world.WorldSlice;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.client.model.data.ModelData;
 
 public class BlockRenderContext {
     private final WorldSlice world;
@@ -21,11 +23,15 @@ public class BlockRenderContext {
 
     private long seed;
 
+    // Forge
+    private ModelData modelData;
+    private RenderType layer;
+
     public BlockRenderContext(WorldSlice world) {
         this.world = world;
     }
 
-    public void update(BlockPos pos, BlockPos origin, BlockState state, BakedModel model, long seed) {
+    public void update(BlockPos pos, BlockPos origin, BlockState state, BakedModel model, long seed, ModelData modelData, RenderType layer) {
         this.pos.set(pos);
         this.origin.set(origin.getX(), origin.getY(), origin.getZ());
 
@@ -33,6 +39,9 @@ public class BlockRenderContext {
         this.model = model;
 
         this.seed = seed;
+
+        this.modelData = modelData;
+        this.layer = layer;
     }
 
     /**
@@ -75,5 +84,13 @@ public class BlockRenderContext {
      */
     public long seed() {
         return this.seed;
+    }
+
+    public ModelData modelData() {
+        return modelData;
+    }
+
+    public RenderType layer() {
+        return layer;
     }
 }

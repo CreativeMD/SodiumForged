@@ -19,7 +19,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
 import me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer;
 import me.jellysquid.mods.sodium.client.render.viewport.ViewportProvider;
-import me.jellysquid.mods.sodium.client.util.FlawlessFrames;
 import me.jellysquid.mods.sodium.client.world.WorldRendererExtended;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -128,7 +127,7 @@ public abstract class WorldRendererMixin implements WorldRendererExtended {
     private void setupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator) {
 
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
-        var updateChunksImmediately = FlawlessFrames.isActive();
+        var updateChunksImmediately = false; //FlawlessFrames.isActive(); has been removed for now as it is not available for forge
 
         RenderDevice.enterManagedCode();
 

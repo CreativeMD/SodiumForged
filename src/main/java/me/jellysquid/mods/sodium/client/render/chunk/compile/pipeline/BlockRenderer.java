@@ -23,8 +23,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.phys.Vec3;
@@ -54,12 +56,12 @@ public class BlockRenderer {
     }
 
     public void renderModel(BlockRenderContext ctx, ChunkBuildBuffers buffers) {
-        var material = DefaultMaterials.forBlockState(ctx.state());
+        var material = DefaultMaterials.forRenderLayer(ctx.layer());
         var meshBuilder = buffers.get(material);
 
         ColorProvider<BlockState> colorizer = this.colorProviderRegistry.getColorProvider(ctx.state().getBlock());
 
-        LightPipeline lighter = this.lighters.getLighter(this.getLightingMode(ctx.state(), ctx.model()));
+        LightPipeline lighter = this.lighters.getLighter(this.getLightingMode(ctx.state(), ctx.model(), ctx.world(), ctx.pos()));
         Vec3 renderOffset;
 
         if (ctx.state().hasOffsetFunction()) {
@@ -87,7 +89,7 @@ public class BlockRenderer {
         var random = this.random;
         random.setSeed(ctx.seed());
 
-        return ctx.model().getQuads(ctx.state(), face, random);
+        return ctx.model().getQuads(ctx.state(), face, random, ctx.modelData(), ctx.layer());
     }
 
     private boolean isFaceVisible(BlockRenderContext ctx, Direction face) {
@@ -159,8 +161,8 @@ public class BlockRenderer {
         vertexBuffer.push(vertices, material);
     }
 
-    private LightMode getLightingMode(BlockState state, BakedModel model) {
-        if (this.useAmbientOcclusion && model.useAmbientOcclusion() && state.getLightEmission() == 0) {
+    private LightMode getLightingMode(BlockState state, BakedModel model, BlockAndTintGetter level, BlockPos pos) {
+        if (this.useAmbientOcclusion && model.useAmbientOcclusion() && state.getLightEmission(level, pos) == 0) {
             return LightMode.SMOOTH;
         } else {
             return LightMode.FLAT;

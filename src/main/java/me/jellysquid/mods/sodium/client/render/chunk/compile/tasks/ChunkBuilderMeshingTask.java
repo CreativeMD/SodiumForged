@@ -20,15 +20,21 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.chunk.VisGraph;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.SingleThreadedRandomSource;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraftforge.client.model.data.ModelData;
 
 /**
  * Rebuilds all the meshes of a chunk for each given render pass with non-occluded blocks. The result is then uploaded
@@ -38,6 +44,8 @@ import net.minecraft.world.level.material.FluidState;
  * array allocations, they are pooled to ensure that the garbage collector doesn't become overloaded.
  */
 public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> {
+
+    private final RandomSource random = new SingleThreadedRandomSource(42L);
     private final RenderSection render;
     private final ChunkRenderContext renderContext;
 
@@ -70,6 +78,8 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
         int maxY = minY + 16;
         int maxZ = minZ + 16;
 
+        Map<BlockPos, ModelData> modelDataMap = slice.world.getModelDataManager()
+                .getAt(new ChunkPos(SectionPos.blockToSectionCoord(minX), SectionPos.blockToSectionCoord(minZ)));
         // Initialise with minX/minY/minZ so initial getBlockState crash context is correct
         MutableBlockPos blockPos = new MutableBlockPos(minX, minY, minZ);
         MutableBlockPos modelOffset = new MutableBlockPos();
@@ -95,11 +105,15 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
 
                         if (blockState.getRenderShape() == RenderShape.MODEL) {
                             BakedModel model = cache.getBlockModels().getBlockModel(blockState);
+                            ModelData modelData = model.getModelData(slice.world, blockPos, blockState, modelDataMap.getOrDefault(blockPos, ModelData.EMPTY));
 
                             long seed = blockState.getSeed(blockPos);
 
-                            context.update(blockPos, modelOffset, blockState, model, seed);
                             cache.getBlockRenderer().renderModel(context, buffers);
+                            for (RenderType layer : model.getRenderTypes(blockState, this.random, modelData)) {
+                                context.update(blockPos, modelOffset, blockState, model, seed, modelData, layer);
+                                cache.getBlockRenderer().renderModel(context, buffers);
+                            }
                         }
 
                         FluidState fluidState = blockState.getFluidState();
