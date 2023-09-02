@@ -29,20 +29,7 @@ minecraft {
     
     runs {
         client {
-            taskName "creativecore_client"
-            workingDirectory project.file('run')
-            
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        server {
-            taskName "creativecore_server"
+            taskName "sodium_client"
             workingDirectory project.file('run')
             
             property 'forge.logging.console.level', 'debug'
