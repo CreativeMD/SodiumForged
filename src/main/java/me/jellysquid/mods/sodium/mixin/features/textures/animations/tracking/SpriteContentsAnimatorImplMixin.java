@@ -11,29 +11,29 @@ import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.render.texture.SpriteContentsExtended;
 import net.minecraft.client.renderer.texture.SpriteContents;
 
-@Mixin(targets = "net/minecraft/client/renderer/texture/SpriteContents$Ticker")
+@Mixin(SpriteContents.Ticker.class)
 public class SpriteContentsAnimatorImplMixin {
     @Unique
     private SpriteContents parent;
-    
+
     /** @author IMS
      * @reason Replace fragile Shadow */
     @Inject(method = "<init>", at = @At("RETURN"))
     public void assignParent(SpriteContents spriteContents, @Coerce Object animation, @Coerce Object interpolation, CallbackInfo ci) {
         this.parent = spriteContents;
     }
-    
+
     @Inject(method = "tickAndUpload", at = @At("HEAD"), cancellable = true)
     private void preTick(CallbackInfo ci) {
         SpriteContentsExtended parent = (SpriteContentsExtended) this.parent;
-        
+
         boolean onDemand = SodiumClientMod.options().performance.animateOnlyVisibleTextures;
-        
+
         if (onDemand && !parent.sodium$isActive()) {
             ci.cancel();
         }
     }
-    
+
     @Inject(method = "tickAndUpload", at = @At("TAIL"))
     private void postTick(CallbackInfo ci) {
         SpriteContentsExtended parent = (SpriteContentsExtended) this.parent;

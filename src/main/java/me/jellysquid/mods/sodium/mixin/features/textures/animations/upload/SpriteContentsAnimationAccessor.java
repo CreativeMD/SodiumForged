@@ -12,6 +12,6 @@ public interface SpriteContentsAnimationAccessor {
     @Accessor
     List<SpriteContents.FrameInfo> getFrames();
 
-    @Accessor
+    @Accessor("frameRowSize")
     int getFrameCount();
 }

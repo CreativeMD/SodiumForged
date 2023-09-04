@@ -27,7 +27,7 @@ public abstract class MatrixStackMixin {
      * @reason Re-use entries when possible
      */
     @Overwrite
-    public void push() {
+    public void pushPose() {
         var prev = this.poseStack.getLast();
 
         PoseStack.Pose entry;
@@ -48,7 +48,7 @@ public abstract class MatrixStackMixin {
      * @reason Re-use entries when possible
      */
     @Overwrite
-    public void pop() {
+    public void popPose() {
         this.cache.addLast(this.poseStack.removeLast());
     }
 }

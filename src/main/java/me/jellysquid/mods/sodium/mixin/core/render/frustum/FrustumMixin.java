@@ -24,10 +24,10 @@ public class FrustumMixin implements ViewportProvider {
 
     @Shadow
     @Final
-    private FrustumIntersection frustumIntersection;
+    private FrustumIntersection intersection;
 
     @Override
     public Viewport sodium$createViewport() {
-        return new Viewport(new SimpleFrustum(this.frustumIntersection), new Vector3d(this.camX, this.camY, this.camZ));
+        return new Viewport(new SimpleFrustum(this.intersection), new Vector3d(this.camX, this.camY, this.camZ));
     }
 }

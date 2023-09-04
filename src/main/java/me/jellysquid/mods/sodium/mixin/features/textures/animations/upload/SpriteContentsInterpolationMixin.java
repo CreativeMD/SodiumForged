@@ -45,7 +45,7 @@ public class SpriteContentsInterpolationMixin {
      * @reason Drastic optimizations
      */
     @Overwrite
-    void apply(int x, int y, SpriteContents.Ticker arg) {
+    void uploadInterpolatedFrame(int x, int y, SpriteContents.Ticker arg) {
         SpriteContents.AnimatedTexture animation = ((SpriteContentsAnimatorImplAccessor) arg).getAnimation();
         SpriteContentsAnimationAccessor animation2 = (SpriteContentsAnimationAccessor) ((SpriteContentsAnimatorImplAccessor) arg).getAnimation();
         List<SpriteContents.FrameInfo> frames = ((SpriteContentsAnimationAccessor) animation).getFrames();

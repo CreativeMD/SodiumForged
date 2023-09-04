@@ -40,7 +40,7 @@ public class MultipartBakedModelMixin {
      * @author JellySquid
      * @reason Avoid expensive allocations and replace bitfield indirection
      */
-    @Overwrite
+    @Overwrite(remap = false)
     public List<BakedQuad> getQuads(BlockState state, Direction face, RandomSource random, ModelData modelData, RenderType layer) {
         if (state == null) {
             return Collections.emptyList();

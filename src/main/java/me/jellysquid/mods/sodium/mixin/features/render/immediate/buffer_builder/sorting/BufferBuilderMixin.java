@@ -74,7 +74,7 @@ public abstract class BufferBuilderMixin {
      * @reason Use direct memory access, avoid indirection
      */
     @Overwrite
-    private void writeSortedIndices(VertexFormat.IndexType indexType) {
+    private void putSortedQuadIndices(VertexFormat.IndexType indexType) {
         if (this.sorting != null) {
             int[] indices = this.sorting.sort(this.sortingPoints);
             this.writePrimitiveIndices(indexType, indices);

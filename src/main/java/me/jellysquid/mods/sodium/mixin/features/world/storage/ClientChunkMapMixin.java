@@ -16,7 +16,7 @@ import net.minecraft.client.multiplayer.ClientChunkCache;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.chunk.LevelChunk;
 
-@Mixin(targets = "accessible class net/minecraft/client/multiplayer/ClientChunkCache$Storage")
+@Mixin(targets = "net/minecraft/client/multiplayer/ClientChunkCache$Storage")
 public class ClientChunkMapMixin {
     @Mutable
     @Shadow

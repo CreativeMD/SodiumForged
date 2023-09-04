@@ -11,12 +11,12 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 
 @Mixin(GuiGraphics.class)
 public class DrawContextMixin {
-    @Inject(method = "dLnet/minecraft/client/gui/GuiGraphics;blit(IIIIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;)V", at = @At("HEAD"))
+    @Inject(method = "blit(IIIIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;)V", at = @At("HEAD"))
     private void preDrawSprite(int x, int y, int z, int width, int height, TextureAtlasSprite sprite, CallbackInfo ci) {
         SpriteUtil.markSpriteActive(sprite);
     }
 
-    @Inject(method = "Lnet/minecraft/client/gui/GuiGraphics;blit(IIIIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;FFFF)V", at = @At("HEAD"))
+    @Inject(method = "blit(IIIIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;FFFF)V", at = @At("HEAD"))
     private void preDrawSprite(int x, int y, int z, int width, int height, TextureAtlasSprite sprite, float red, float green, float blue, float alpha, CallbackInfo ci) {
         SpriteUtil.markSpriteActive(sprite);
     }

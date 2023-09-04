@@ -33,7 +33,9 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter {
     private int nextElementByte;
 
     @Shadow
-    protected abstract void ensureCapacity(int size);
+    private void ensureCapacity(int size) {
+        throw new AssertionError();
+    }
 
     @Unique
     private VertexFormatDescription format;
@@ -41,7 +43,7 @@ public abstract class BufferBuilderMixin implements VertexBufferWriter {
     @Unique
     private int stride;
 
-    @Inject(method = "switchFormat", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;switchFormat:Lcom/mojang/blaze3d/vertex/VertexFormat;", opcode = Opcodes.PUTFIELD))
+    @Inject(method = "switchFormat", at = @At(value = "FIELD", target = "Lcom/mojang/blaze3d/vertex/BufferBuilder;format:Lcom/mojang/blaze3d/vertex/VertexFormat;", opcode = Opcodes.PUTFIELD))
     private void onFormatChanged(VertexFormat format, CallbackInfo ci) {
         this.format = VertexFormatRegistry.instance().get(format);
         this.stride = format.getVertexSize();
