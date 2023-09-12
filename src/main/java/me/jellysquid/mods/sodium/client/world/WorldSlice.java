@@ -43,7 +43,8 @@ import net.minecraft.world.level.material.FluidState;
  *
  * <p>Object pooling should be used to avoid huge allocations as this class contains many large arrays.</p>
  */
-public final class WorldSlice implements BlockAndTintGetter/*, RenderAttachedBlockView*/, BiomeColorView {
+public final class WorldSlice implements BlockAndTintGetter, BiomeColorView/*, RenderAttachedBlockView*/ {
+
     private static final LightLayer[] LIGHT_TYPES = LightLayer.values();
 
     // The number of blocks in a section.
@@ -82,8 +83,8 @@ public final class WorldSlice implements BlockAndTintGetter/*, RenderAttachedBlo
     // (Local Section -> Block Entity) table.
     private final @Nullable Int2ReferenceMap<BlockEntity>[] blockEntityArrays;
 
-    // (Local Section -> Block Entity Attachment) table.
-    private final @Nullable Int2ReferenceMap<Object>[] blockEntityAttachmentArrays;
+    // (Local Section -> Block Entity Render Data) table.
+    private final @Nullable Int2ReferenceMap<Object>[] blockEntityRenderDataArrays;
 
     // The starting point from which this slice captures blocks
     private int originX, originY, originZ;
@@ -133,7 +134,7 @@ public final class WorldSlice implements BlockAndTintGetter/*, RenderAttachedBlo
         this.lightArrays = new DataLayer[SECTION_ARRAY_SIZE][LIGHT_TYPES.length];
 
         this.blockEntityArrays = new Int2ReferenceMap[SECTION_ARRAY_SIZE];
-        this.blockEntityAttachmentArrays = new Int2ReferenceMap[SECTION_ARRAY_SIZE];
+        this.blockEntityRenderDataArrays = new Int2ReferenceMap[SECTION_ARRAY_SIZE];
 
         this.biomeSlice = new BiomeSlice();
         this.biomeColors = new BiomeColorCache(this.biomeSlice, Minecraft.getInstance().options.biomeBlendRadius().get());
@@ -167,7 +168,7 @@ public final class WorldSlice implements BlockAndTintGetter/*, RenderAttachedBlo
         this.lightArrays[sectionIndex][LightLayer.SKY.ordinal()] = section.getLightArray(LightLayer.SKY);
 
         this.blockEntityArrays[sectionIndex] = section.getBlockEntityMap();
-        this.blockEntityAttachmentArrays[sectionIndex] = section.getBlockEntityAttachmentMap();
+        this.blockEntityRenderDataArrays[sectionIndex] = section.getBlockEntityRenderDataMap();
     }
 
     private void unpackBlockData(BlockState[] blockArray, ChunkRenderContext context, ClonedChunkSection section) {
@@ -207,7 +208,7 @@ public final class WorldSlice implements BlockAndTintGetter/*, RenderAttachedBlo
             Arrays.fill(this.lightArrays[sectionIndex], null);
 
             this.blockEntityArrays[sectionIndex] = null;
-            this.blockEntityAttachmentArrays[sectionIndex] = null;
+            this.blockEntityRenderDataArrays[sectionIndex] = null;
         }
     }
 
@@ -311,25 +312,25 @@ public final class WorldSlice implements BlockAndTintGetter/*, RenderAttachedBlo
         return this.world.getMinBuildHeight();
     }
 
-    /*@Override Removed because a system like this does not exist in forge
-    public @Nullable Object getBlockEntityRenderAttachment(BlockPos pos) {
-        int relX = pos.getX() - this.originX;
-        int relY = pos.getY() - this.originY;
-        int relZ = pos.getZ() - this.originZ;
-    
-        var blockEntityAttachments = this.blockEntityAttachmentArrays[getLocalSectionIndex(relX >> 4, relY >> 4, relZ >> 4)];
-    
-        if (blockEntityAttachments == null) {
-            return null;
-        }
-    
-        return blockEntityAttachments.get(getLocalBlockIndex(relX & 15, relY & 15, relZ & 15));
-    }*/
-
     @Override
     public int getColor(BiomeColorSource source, int x, int y, int z) {
         return this.biomeColors.getColor(source, x, y, z);
     }
+
+    /*@Override
+    public @Nullable Object getBlockEntityRenderData(BlockPos pos) {
+        int relX = pos.getX() - this.originX;
+        int relY = pos.getY() - this.originY;
+        int relZ = pos.getZ() - this.originZ;
+    
+        var blockEntityRenderDataMap = this.blockEntityRenderDataArrays[getLocalSectionIndex(relX >> 4, relY >> 4, relZ >> 4)];
+    
+        if (blockEntityRenderDataMap == null) {
+            return null;
+        }
+    
+        return blockEntityRenderDataMap.get(getLocalBlockIndex(relX & 15, relY & 15, relZ & 15));
+    }*/
 
     public static int getLocalBlockIndex(int x, int y, int z) {
         return (y << LOCAL_XYZ_BITS << LOCAL_XYZ_BITS) | (z << LOCAL_XYZ_BITS) | x;
