@@ -25,7 +25,7 @@ public class SodiumClientMod {
 
     public SodiumClientMod() {
         SodiumPreLaunch.onPreLaunch();
-        MOD_VERSION = ModList.get().getModContainerById("rubidium").get().getModInfo().getVersion().toString();
+        MOD_VERSION = ModList.get().getModContainerById("sodiumforged").get().getModInfo().getVersion().toString();
         ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class,
                 () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
         //FlawlessFrames.onClientInitialization(); Feature has been removed till the mod is available for forge

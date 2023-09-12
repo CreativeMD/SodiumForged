@@ -16,8 +16,8 @@ public class RenderLayersMixin {
     @Unique
     private static boolean leavesFancy;
 
-    @Redirect(method = { "getChunkRenderType",
-            "getMovingBlockRenderType" }, at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/ItemBlockRenderTypes;setFancy(Z)V"))
+    @Redirect(method = { "getChunkRenderType", "getMovingBlockRenderType",
+            "getRenderLayers" }, at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/ItemBlockRenderTypes;renderCutout:Z"))
     private static boolean redirectLeavesShouldBeFancy() {
         return leavesFancy;
     }
