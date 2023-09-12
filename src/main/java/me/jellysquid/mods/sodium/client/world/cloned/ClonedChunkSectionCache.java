@@ -26,13 +26,13 @@ public class ClonedChunkSectionCache {
         this.time = getMonotonicTimeSource();
     }
 
-    public void cleanup() {
+    public synchronized void cleanup() {
         this.time = getMonotonicTimeSource();
         this.positionToEntry.values().removeIf(entry -> this.time > (entry.getLastUsedTimestamp() + MAX_CACHE_DURATION));
     }
 
     @Nullable
-    public ClonedChunkSection acquire(int x, int y, int z) {
+    public synchronized ClonedChunkSection acquire(int x, int y, int z) {
         var pos = SectionPos.asLong(x, y, z);
         var section = this.positionToEntry.getAndMoveToLast(pos);
 
@@ -69,7 +69,7 @@ public class ClonedChunkSectionCache {
         return new ClonedChunkSection(this.world, chunk, section, SectionPos.of(x, y, z));
     }
 
-    public void invalidate(int x, int y, int z) {
+    public synchronized void invalidate(int x, int y, int z) {
         this.positionToEntry.remove(SectionPos.asLong(x, y, z));
     }
 
