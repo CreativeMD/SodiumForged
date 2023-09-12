@@ -3,6 +3,7 @@ package me.jellysquid.mods.sodium.mixin.core.render.world;
 import java.util.SortedSet;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -34,6 +35,7 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.BlockDestructionProgress;
+import net.minecraftforge.client.ForgeHooksClient;
 
 @Mixin(LevelRenderer.class)
 public abstract class WorldRendererMixin implements WorldRendererExtended {
@@ -47,6 +49,23 @@ public abstract class WorldRendererMixin implements WorldRendererExtended {
 
     @Shadow
     private boolean needsFullRenderChunkUpdate;
+
+    @Shadow
+    private int ticks;
+
+    @Shadow
+    @Final
+    private Minecraft minecraft;
+
+    @Shadow
+    private Frustum cullingFrustum;
+
+    @Shadow
+    private Frustum capturedFrustum;
+
+    @Shadow
+    @Final
+    private Vector3d frustumPos;
 
     @Unique
     private SodiumWorldRenderer renderer;
@@ -117,6 +136,18 @@ public abstract class WorldRendererMixin implements WorldRendererExtended {
         } finally {
             RenderDevice.exitManagedCode();
         }
+
+        boolean flag = this.capturedFrustum != null;
+        Frustum frustum;
+        if (flag) {
+            frustum = this.capturedFrustum;
+            frustum.prepare(this.frustumPos.x, this.frustumPos.y, this.frustumPos.z);
+        } else {
+            frustum = this.cullingFrustum;
+        }
+
+        ForgeHooksClient.dispatchRenderStage(renderLayer, ((LevelRenderer) (Object) this), matrices, matrix, this.ticks, minecraft.gameRenderer.getMainCamera(),
+                frustum);
     }
 
     /**
