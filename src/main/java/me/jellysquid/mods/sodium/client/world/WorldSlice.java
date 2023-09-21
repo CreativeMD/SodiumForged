@@ -43,7 +43,7 @@ import net.minecraft.world.level.material.FluidState;
  *
  * <p>Object pooling should be used to avoid huge allocations as this class contains many large arrays.</p>
  */
-public final class WorldSlice implements BlockAndTintGetter, BiomeColorView/*, RenderAttachedBlockView*/ {
+public class WorldSlice implements BlockAndTintGetter, BiomeColorView/*, RenderAttachedBlockView*/ {
 
     private static final LightLayer[] LIGHT_TYPES = LightLayer.values();
 
