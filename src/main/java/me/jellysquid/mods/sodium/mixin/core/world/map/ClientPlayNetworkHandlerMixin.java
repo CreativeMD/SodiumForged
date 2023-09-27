@@ -25,6 +25,6 @@ public class ClientPlayNetworkHandlerMixin {
 
     @Inject(method = "handleForgetLevelChunk", at = @At("RETURN"))
     private void onChunkUnloadPacket(ClientboundForgetLevelChunkPacket packet, CallbackInfo ci) {
-        ChunkTrackerHolder.get(this.level).onChunkStatusRemoved(packet.getX(), packet.getZ(), ChunkStatus.FLAG_ALL);
+        ChunkTrackerHolder.get(this.level).onChunkStatusRemoved(packet.pos().x, packet.pos().z, ChunkStatus.FLAG_ALL);
     }
 }
