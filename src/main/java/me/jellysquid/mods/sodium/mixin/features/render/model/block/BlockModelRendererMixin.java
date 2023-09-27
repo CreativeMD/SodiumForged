@@ -77,7 +77,7 @@ public class BlockModelRendererMixin {
         for (int i = 0; i < quads.size(); i++) {
             BakedQuad bakedQuad = quads.get(i);
 
-            if (bakedQuad.getVertexData().length < 32) {
+            if (bakedQuad.getVertices().length < 32) {
                 continue; // ignore bad quads
             }
 

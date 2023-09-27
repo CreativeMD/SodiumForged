@@ -34,7 +34,7 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer {
             throw new IllegalStateException();
         }
 
-        if (bakedQuad.getVertexData().length < 32) {
+        if (bakedQuad.getVertices().length < 32) {
             return; // we do not accept quads with less than 4 properly sized vertices
         }
 
@@ -62,7 +62,7 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer {
             throw new IllegalStateException();
         }
 
-        if (bakedQuad.getVertexData().length < 32) {
+        if (bakedQuad.getVertices().length < 32) {
             return; // we do not accept quads with less than 4 properly sized vertices
         }
 

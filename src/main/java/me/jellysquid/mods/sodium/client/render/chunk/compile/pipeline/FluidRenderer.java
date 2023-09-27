@@ -203,7 +203,7 @@ public class FluidRenderer {
 
             float uAvg = (u1 + u2 + u3 + u4) / 4.0F;
             float vAvg = (v1 + v2 + v3 + v4) / 4.0F;
-            float s3 = sprites[0].getAnimationFrameDelta();
+            float s3 = sprites[0].uvShrinkRatio();
 
             u1 = Mth.lerp(s3, u1, uAvg);
             u2 = Mth.lerp(s3, u2, uAvg);
