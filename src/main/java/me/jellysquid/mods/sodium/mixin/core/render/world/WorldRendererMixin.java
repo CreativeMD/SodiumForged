@@ -102,7 +102,7 @@ public abstract class WorldRendererMixin implements WorldRendererExtended {
      * @author JellySquid
      */
     @Overwrite
-    public int countRenderedChunks() {
+    public int countRenderedSections() {
         return this.renderer.getVisibleChunkCount();
     }
 
@@ -111,7 +111,7 @@ public abstract class WorldRendererMixin implements WorldRendererExtended {
      * @author JellySquid
      */
     @Overwrite
-    public boolean hasRenderedAllChunks() {
+    public boolean hasRenderedAllSections() {
         return this.renderer.isTerrainRenderComplete();
     }
 
@@ -125,7 +125,7 @@ public abstract class WorldRendererMixin implements WorldRendererExtended {
      * @author JellySquid
      */
     @Overwrite
-    private void renderChunkLayer(RenderType renderLayer, PoseStack matrices, double x, double y, double z, Matrix4f matrix) {
+    private void renderSectionLayer(RenderType renderLayer, PoseStack matrices, double x, double y, double z, Matrix4f matrix) {
         RenderDevice.enterManagedCode();
 
         try {
@@ -207,7 +207,7 @@ public abstract class WorldRendererMixin implements WorldRendererExtended {
      * @author JellySquid
      */
     @Overwrite
-    public boolean isChunkCompiled(BlockPos pos) {
+    public boolean isSectionCompiled(BlockPos pos) {
         return this.renderer.isSectionReady(pos.getX() >> 4, pos.getY() >> 4, pos.getZ() >> 4);
     }
 
@@ -232,7 +232,7 @@ public abstract class WorldRendererMixin implements WorldRendererExtended {
      * @author JellySquid
      */
     @Overwrite
-    public String getChunkStatistics() {
+    public String getSectionStatistics() {
         return this.renderer.getChunksDebugString();
     }
 }
