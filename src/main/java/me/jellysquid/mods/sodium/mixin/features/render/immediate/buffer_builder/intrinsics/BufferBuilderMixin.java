@@ -34,6 +34,10 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer {
             throw new IllegalStateException();
         }
 
+        if (bakedQuad.getVertexData().length < 32) {
+            return; // we do not accept quads with less than 4 properly sized vertices
+        }
+
         VertexBufferWriter writer = VertexBufferWriter.of(this);
 
         ModelQuadView quad = (ModelQuadView) bakedQuad;
@@ -56,6 +60,10 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer {
 
         if (this.defaultColorSet) {
             throw new IllegalStateException();
+        }
+
+        if (bakedQuad.getVertexData().length < 32) {
+            return; // we do not accept quads with less than 4 properly sized vertices
         }
 
         VertexBufferWriter writer = VertexBufferWriter.of(this);
