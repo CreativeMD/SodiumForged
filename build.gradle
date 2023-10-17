@@ -1,7 +1,6 @@
 plugins {
     id 'eclipse'
     id 'idea'
-    id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
     id 'com.diffplug.eclipse.apt'
     id 'org.spongepowered.mixin'
@@ -104,21 +103,8 @@ mixin {
     config 'sodium.mixins.json'
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/mcmodsrepo"
-        }
-    }
-}
-
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+    options.encoding = 'UTF-8'
 }
 
 
